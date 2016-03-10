@@ -56,7 +56,7 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 	var buf bytes.Buffer
 
 	request.Body.SOAPAction = GetPacketList{
-		CreateDatePoint: "2016-03-09",
+		CreateDatePoint: date,
 	}
 
 	enc := xml.NewEncoder(&buf)
@@ -83,5 +83,5 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 		return nil, err
 	}
 
-	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo[0:20], nil
+	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo, nil
 }
