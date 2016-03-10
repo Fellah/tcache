@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/fellah/stop"
+
 	"github.com/fellah/tcache/jobs"
 )
 
 func main() {
-	jobs.GetPacketList()
+	jobs.Pipe()
 
 	<-stop.Ch
 
