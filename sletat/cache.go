@@ -17,7 +17,6 @@ type Tours struct {
 
 type Tour struct {
 	XMLName xml.Name `xml:"tour"`
-	//TourName string `xml:"tourName,attr"`
 
 	OfferId               int    `xml:"offerId,attr"`
 	RequestId             int    `xml:"requestId,attr"`
