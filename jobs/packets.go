@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/fellah/tcache/sletat"
-
 )
 
 const (
@@ -17,7 +16,7 @@ func FetchPacketsList(chPocketId chan<- string) {
 		log.Fatal(err)
 	}
 
-	for i := 0; i < WORKERS_NUM; i ++ {
+	for i := 0; i < WORKERS_NUM; i++ {
 		chPocketId <- packets[i].Id
 	}
 
