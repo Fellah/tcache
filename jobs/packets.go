@@ -2,27 +2,27 @@ package jobs
 
 import (
 	"log"
+	"time"
 
 	"github.com/fellah/tcache/sletat"
 )
 
-const (
-	WORKERS_NUM = 10
-)
-
 func FetchPacketsList(chPocketId chan<- string) {
-	packets, err := sletat.FetchPacketsList("2016-03-10T20:00:00Z")
+	t := time.Now().UTC()
+	t = t.Add(3 * time.Hour)  // UTC +3h
+	t = t.Add(-2 * time.Hour) // 2 hour
+
+	packets, err := sletat.FetchPacketsList(t.Format(time.RFC3339))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for i := range packets {
-		log.Println(packets[i].CreateDate)
-	}
+	l := len(packets)
 
-	/*for i := 0; i < WORKERS_NUM; i++ {
+	for i := range packets {
+		log.Println("TOTAL:", l, " - i", i)
 		chPocketId <- packets[i].Id
-	}*/
+	}
 
 	close(chPocketId)
 }
