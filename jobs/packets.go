@@ -17,10 +17,7 @@ func FetchPacketsList(chPocketId chan<- string) {
 		log.Fatal(err)
 	}
 
-	l := len(packets)
-
 	for i := range packets {
-		log.Println("TOTAL:", l, " - i", i)
 		chPocketId <- packets[i].Id
 	}
 
