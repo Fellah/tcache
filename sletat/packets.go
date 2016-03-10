@@ -8,8 +8,8 @@ import (
 
 var request = Request{
 	Header: RequestHeader{
-		AuthInfo: AuthInfo {
-			Login: login,
+		AuthInfo: AuthInfo{
+			Login:    login,
 			Password: password,
 		},
 	},
@@ -17,8 +17,8 @@ var request = Request{
 
 // SOAPAction
 type GetPacketList struct {
-	XMLName xml.Name `xml:"urn:SletatRu:Contracts:Bulk:Soap11Gate:v1 GetPacketList"`
-	CreateDatePoint   string   `xml:"createDatePoint"`
+	XMLName         xml.Name `xml:"urn:SletatRu:Contracts:Bulk:Soap11Gate:v1 GetPacketList"`
+	CreateDatePoint string   `xml:"createDatePoint"`
 }
 
 type EnvelopeResponse struct {
