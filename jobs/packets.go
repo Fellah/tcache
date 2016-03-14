@@ -22,7 +22,7 @@ func FetchPackets(chSavePocket chan<- sletat.PacketInfo) {
 		log.Fatal(err)
 	}
 
-	packets = packets[:10]
+	packets = packets
 
 	for i := range packets {
 		chSavePocket <- packets[i]
