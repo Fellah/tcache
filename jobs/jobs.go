@@ -1,13 +1,32 @@
 package jobs
 
+import (
+	"time"
+
+	"github.com/fellah/tcache/sletat"
+)
+
 const WORKERS_NUM = 10
 
-func Pipe() {
-	chPocketId := make(chan string)
+var ticker = time.NewTicker(2 * time.Hour)
 
-	go FetchPacketsList(chPocketId)
+func Start() {
+	for {
+		Pipe()
+		<-ticker.C
+	}
+}
+
+func Stop() {
+	ticker.Stop()
+}
+
+func Pipe() {
+	chPocket := make(chan sletat.PacketInfo)
+
+	go FetchPackets(chPocket)
 
 	for i := 0; i < WORKERS_NUM; i++ {
-		go FetchBulkCacheDownload(chPocketId)
+		go FetchTours(chPocket)
 	}
 }
