@@ -3,7 +3,7 @@ package sletat
 import (
 	"compress/gzip"
 	"encoding/xml"
-	//"log"
+	"log"
 )
 
 const (
@@ -62,12 +62,19 @@ type Tour struct {
 	PriceType             int    `xml:"priceType,attr"`
 	Flags                 int    `xml:"flags,attr"`
 	Hash                  string `xml:"hash,attr"`
-	CreateDate            string
+
+	CreateDate string
+
+	DptCityId int
+
+	PriceByr int
+	PriceEur int
+	PriceUsd int
 }
 
 func FetchTours(packetId string) ([]Tour, error) {
 	url := BULK_CACHE_URL + packetId
-	// log.Println("Download:", url)
+	log.Println("Download:", url)
 
 	resp, err := client.Get(url)
 	if err != nil {

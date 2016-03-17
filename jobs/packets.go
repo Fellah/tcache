@@ -22,15 +22,16 @@ func FetchPackets(chSavePocket chan<- sletat.PacketInfo) {
 		log.Fatal(err)
 	}
 
-	packets = packets
+	packets = packets[:2]
 
 	for i := range packets {
 		chSavePocket <- packets[i]
 	}
 
-	db.RemoveExistPackets(t)
+	/*db.RemoveExistPackets(t)
+	go db.SavePackets(packets)*/
+
 	db.RemoveExistTours(t)
-	go db.SavePackets(packets)
 
 	close(chSavePocket)
 }

@@ -22,6 +22,8 @@ func Stop() {
 }
 
 func Pipe() {
+	QueryOperators()
+
 	chPocket := make(chan sletat.PacketInfo)
 
 	go FetchPackets(chPocket)
