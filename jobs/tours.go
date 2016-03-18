@@ -22,6 +22,15 @@ func FetchTours(chPocket <-chan sletat.PacketInfo) {
 
 			for i := range tours {
 				tours[i].CreateDate = pocket.CreateDate
+
+				tours[i].DptCityId = pocket.DptCityId
+
+				if operator, ok := operators[tours[i].SourceId]; ok {
+					tours[i].PriceByr = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
+					tours[i].PriceEur = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
+					tours[i].PriceEur = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
+				}
+
 			}
 
 			go db.SaveTours(tours)
@@ -31,4 +40,8 @@ func FetchTours(chPocket <-chan sletat.PacketInfo) {
 			return
 		}
 	}
+}
+
+func currencyPrice(price int, exchange float64) int {
+	return price * int(exchange)
 }

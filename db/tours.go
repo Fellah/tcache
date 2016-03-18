@@ -10,7 +10,7 @@ import (
 )
 
 func RemoveExistTours(t time.Time) {
-	_, err := db.Query(`DELETE FROM tours WHERE created_at >= $1`, t)
+	_, err := db.Query(`DELETE FROM cached_sletat_tours WHERE created_at >= $1`, t)
 	if err != nil {
 		log.Println(err)
 	}
@@ -23,7 +23,7 @@ func SaveTours(tours []sletat.Tour) {
 	}
 
 	stmt, err := txn.Prepare(pq.CopyIn(
-		"tours",
+		"cached_sletat_tours",
 		"tour_hash",
 		"offer_id",
 		"request_id",
@@ -69,6 +69,13 @@ func SaveTours(tours []sletat.Tour) {
 		"flags",
 		"created_at",
 		"updated_at",
+
+		"dpt_city_id",
+
+		"price_byr",
+		"price_eur",
+		"price_usd",
+
 		//"uploader_id",
 	))
 	if err != nil {
@@ -122,6 +129,13 @@ func SaveTours(tours []sletat.Tour) {
 			tour.Flags,
 			tour.CreateDate,
 			tour.UpdateDate,
+
+			tour.DptCityId,
+
+			tour.PriceByr,
+			tour.PriceEur,
+			tour.PriceUsd,
+
 			// "uploader_id"
 		)
 		if err != nil {
