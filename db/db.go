@@ -14,7 +14,7 @@ const (
 
 var (
 	db_connection string
-	db *sql.DB
+	db            *sql.DB
 )
 
 func init() {
