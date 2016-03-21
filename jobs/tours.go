@@ -36,14 +36,13 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 
 	if operator, ok := operators[tour.SourceId]; ok {
 		tour.PriceByr = currencyPrice(tour.Price, operator.ExchangeRateRur)
-		tour.PriceEur = currencyPrice(tour.Price, operator.ExchangeRateRur)
-		tour.PriceEur = currencyPrice(tour.Price, operator.ExchangeRateRur)
+		tour.PriceEur = currencyPrice(tour.Price, operator.ExchangeRateEur)
+		tour.PriceUsd = currencyPrice(tour.Price, operator.ExchangeRateUsd)
 	}
 }
 
 func currencyPrice(price int, exchange float64) int {
-	return price
-	//return price * int(exchange)
+	return price * int(exchange)
 }
 
 func saveTours(chTour <-chan sletat.Tour) {
