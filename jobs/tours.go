@@ -42,7 +42,7 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 }
 
 func currencyPrice(price int, exchange float64) int {
-	return price * int(exchange)
+	return int(float64(price) * exchange)
 }
 
 func saveTours(chTour <-chan sletat.Tour) {
