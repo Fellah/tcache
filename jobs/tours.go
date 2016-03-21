@@ -2,46 +2,58 @@ package jobs
 
 import (
 	"log"
-	"time"
 
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/sletat"
 )
 
-func FetchTours(chPocket <-chan sletat.PacketInfo) {
-	for {
-		select {
-		case pocket, ok := <-chPocket:
-			if !ok {
-				return
+func fetchTours(chPacket <-chan sletat.PacketInfo, chTour chan<- sletat.Tour) {
+	for packet := range chPacket {
+		chRawTour := make(chan sletat.Tour)
+
+		// Process raw tour and send it to the channel for save.
+		go func(packet sletat.PacketInfo, chRawTour <-chan sletat.Tour) {
+			for tour := range chRawTour {
+				processTour(packet, &tour)
+				chTour <- tour
 			}
-			tours, err := sletat.FetchTours(pocket.Id)
-			if err != nil {
-				log.Println(err)
-			}
+		}(packet, chRawTour)
 
-			for i := range tours {
-				tours[i].CreateDate = pocket.CreateDate
-
-				tours[i].DptCityId = pocket.DptCityId
-
-				if operator, ok := operators[tours[i].SourceId]; ok {
-					tours[i].PriceByr = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
-					tours[i].PriceEur = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
-					tours[i].PriceEur = currencyPrice(tours[i].Price, operator.ExchangeRateRur)
-				}
-
-			}
-
-			go db.SaveTours(tours)
-
-		case <-time.After(900 * time.Second):
-			log.Println("TIMEOUT")
-			return
+		// Read tours from XML stream and send them to them channel
+		err := sletat.FetchTours(packet.Id, chRawTour)
+		if err != nil {
+			log.Println(err)
 		}
+
+		close(chRawTour)
+	}
+}
+
+func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
+	tour.CreateDate = packet.CreateDate
+
+	tour.DptCityId = packet.DptCityId
+
+	if operator, ok := operators[tour.SourceId]; ok {
+		tour.PriceByr = currencyPrice(tour.Price, operator.ExchangeRateRur)
+		tour.PriceEur = currencyPrice(tour.Price, operator.ExchangeRateRur)
+		tour.PriceEur = currencyPrice(tour.Price, operator.ExchangeRateRur)
 	}
 }
 
 func currencyPrice(price int, exchange float64) int {
-	return price * int(exchange)
+	return price
+	//return price * int(exchange)
+}
+
+func saveTours(chTour <-chan sletat.Tour) {
+	tours := make([]sletat.Tour, 0, 64)
+
+	for tour := range chTour {
+		tours = append(tours, tour)
+		if len(tours) == 64 {
+			db.SaveTours(tours)
+			tours = make([]sletat.Tour, 0, 256)
+		}
+	}
 }

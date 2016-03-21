@@ -10,13 +10,8 @@ const (
 	BULK_CACHE_URL = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 )
 
-type Tours struct {
-	XMLName xml.Name `xml:"tours"`
-	Tour    []Tour   `xml:"tour"`
-}
-
 type Tour struct {
-	XMLName xml.Name `xml:"tour"`
+	//XMLName xml.Name `xml:"tour"`
 
 	OfferId               int    `xml:"offerId,attr"`
 	RequestId             int    `xml:"requestId,attr"`
@@ -72,23 +67,43 @@ type Tour struct {
 	PriceUsd int
 }
 
-func FetchTours(packetId string) ([]Tour, error) {
+func FetchTours(packetId string, chRawTour chan<- Tour) error {
+	var tour Tour
+
 	url := BULK_CACHE_URL + packetId
 	log.Println("Download:", url)
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	gzipReader, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return err
+	}
 	defer gzipReader.Close()
 
-	tours := Tours{}
-	if err = xml.NewDecoder(gzipReader).Decode(&tours); err != nil {
-		return nil, err
+	decoder := xml.NewDecoder(gzipReader)
+	for {
+		t, err := decoder.Token()
+		if err != nil && err.Error() != "EOF" {
+			log.Println(err)
+		}
+
+		if t == nil {
+			break
+		}
+
+		switch se := t.(type) {
+		case xml.StartElement:
+			if se.Name.Local == "tour" {
+				decoder.DecodeElement(&tour, &se)
+				chRawTour <- tour
+			}
+		}
 	}
 
-	return tours.Tour, nil
+	return nil
 }

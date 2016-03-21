@@ -3,6 +3,7 @@ package sletat
 import (
 	"bytes"
 	"encoding/xml"
+	"log"
 	"net/http"
 )
 
@@ -21,39 +22,20 @@ type GetPacketList struct {
 	CreateDatePoint string   `xml:"createDatePoint"`
 }
 
-type EnvelopeResponse struct {
-	XMLName xml.Name `xml:"Envelope"`
-	Body    BodyResponse
-}
-
-type BodyResponse struct {
-	XMLName               xml.Name `xml:"Body"`
-	GetPacketListResponse GetPacketListResponse
-}
-
-type GetPacketListResponse struct {
-	XMLName             xml.Name `xml:"GetPacketListResponse"`
-	GetPacketListResult GetPacketListResult
-}
-
-type GetPacketListResult struct {
-	XMLName    xml.Name `xml:"GetPacketListResult"`
-	PacketInfo []PacketInfo
-}
-
 type PacketInfo struct {
-	XMLName      xml.Name `xml:"PacketInfo"`
-	CountryId    int      `xml:"CountryId"`
-	CreateDate   string   `xml:"CreateDate"`
-	DateTimeFrom string   `xml:"DateTimeFrom"`
-	DateTimeTo   string   `xml:"DateTimeTo"`
-	DptCityId    int      `xml:"DptCityId"`
-	Id           string   `xml:"Id"`
-	SourceId     int      `xml:"SourceId"`
+	//XMLName      xml.Name `xml:"PacketInfo"`
+	CountryId    int    `xml:"CountryId"`
+	CreateDate   string `xml:"CreateDate"`
+	DateTimeFrom string `xml:"DateTimeFrom"`
+	DateTimeTo   string `xml:"DateTimeTo"`
+	DptCityId    int    `xml:"DptCityId"`
+	Id           string `xml:"Id"`
+	SourceId     int    `xml:"SourceId"`
 }
 
-func FetchPacketsList(date string) ([]PacketInfo, error) {
+func FetchPacketsList(date string, chPacket chan<- PacketInfo) error {
 	var buf bytes.Buffer
+	var packet PacketInfo
 
 	request.Body.SOAPAction = GetPacketList{
 		CreateDatePoint: date,
@@ -61,12 +43,12 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 
 	enc := xml.NewEncoder(&buf)
 	if err := enc.Encode(request); err != nil {
-		return nil, err
+		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, URL, &buf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	req.Header.Add("Content-Type", "text/xml;charset=UTF-8")
@@ -74,14 +56,29 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	envelope := EnvelopeResponse{}
-	if err = xml.NewDecoder(resp.Body).Decode(&envelope); err != nil {
-		return nil, err
+	decoder := xml.NewDecoder(resp.Body)
+	for {
+		t, err := decoder.Token()
+		if err != nil && err.Error() != "EOF" {
+			log.Println(err)
+		}
+
+		if t == nil {
+			break
+		}
+
+		switch se := t.(type) {
+		case xml.StartElement:
+			if se.Name.Local == "PacketInfo" {
+				decoder.DecodeElement(&packet, &se)
+				chPacket <- packet
+			}
+		}
 	}
 
-	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo, nil
+	return nil
 }

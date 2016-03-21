@@ -4,34 +4,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/sletat"
 )
 
-func FetchPackets(chSavePocket chan<- sletat.PacketInfo) {
-	t := time.Now().UTC()
-	t = t.Add(3 * time.Hour)  // UTC +3h
-	t = t.Add(-2 * time.Hour) // 2 hour
-
-	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
-
+func fetchPackets(t time.Time) <-chan sletat.PacketInfo {
 	log.Println("Download packets from", t.Format(time.RFC3339))
 
-	packets, err := sletat.FetchPacketsList(t.Format(time.RFC3339))
-	if err != nil {
-		log.Fatal(err)
-	}
+	chPacket := make(chan sletat.PacketInfo)
 
-	packets = packets[:2]
+	go func(chPacket chan sletat.PacketInfo) {
+		err := sletat.FetchPacketsList(t.Format(time.RFC3339), chPacket)
+		if err != nil {
+			log.Fatal(err)
+		}
+		close(chPacket)
+	}(chPacket)
 
-	for i := range packets {
-		chSavePocket <- packets[i]
-	}
-
-	/*db.RemoveExistPackets(t)
-	go db.SavePackets(packets)*/
-
-	db.RemoveExistTours(t)
-
-	close(chSavePocket)
+	return chPacket
 }

@@ -19,7 +19,8 @@ func RemoveExistTours(t time.Time) {
 func SaveTours(tours []sletat.Tour) {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	stmt, err := txn.Prepare(pq.CopyIn(
@@ -75,11 +76,10 @@ func SaveTours(tours []sletat.Tour) {
 		"price_byr",
 		"price_eur",
 		"price_usd",
-
-		//"uploader_id",
 	))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	for _, tour := range tours {
@@ -135,17 +135,16 @@ func SaveTours(tours []sletat.Tour) {
 			tour.PriceByr,
 			tour.PriceEur,
 			tour.PriceUsd,
-
-			// "uploader_id"
 		)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	/*err = stmt.Close()
@@ -155,6 +154,7 @@ func SaveTours(tours []sletat.Tour) {
 
 	err = txn.Commit()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 }
