@@ -11,8 +11,6 @@ const (
 )
 
 type Tour struct {
-	//XMLName xml.Name `xml:"tour"`
-
 	OfferId               int    `xml:"offerId,attr"`
 	RequestId             int    `xml:"requestId,attr"`
 	SourceId              int    `xml:"sourceId,attr"`
@@ -36,7 +34,7 @@ type Tour struct {
 	HasBusinessTicketsDpt int    `xml:"hasBusinessTicketsDpt,attr"`
 	HasBusinessTicketsRtn int    `xml:"hasBusinessTicketsRtn,attr"`
 	TourName              string `xml:"tourName,attr"`
-	HotelName             string `xml:"hotelName,attr"`
+	/*HotelName             string `xml:"hotelName,attr"`
 	TownName              string `xml:"townName,attr"`
 	StarName              string `xml:"starName,attr"`
 	MealName              string `xml:"mealName,attr"`
@@ -51,12 +49,12 @@ type Tour struct {
 	OriginalCountryName   string `xml:"originalCountryName,attr"`
 	OriginalDptCityName   string `xml:"originalDptCityName,attr"`
 	OriginalCurrencyId    int    `xml:"originalCurrencyId,attr"`
-	OriginalCurrencyName  string `xml:"originalCurrencyName,attr"`
-	OriginalPrice         int    `xml:"originalPrice,attr"`
-	TourUrl               string `xml:"tourUrl,attr"`
-	PriceType             int    `xml:"priceType,attr"`
-	Flags                 int    `xml:"flags,attr"`
-	Hash                  string `xml:"hash,attr"`
+	OriginalCurrencyName  string `xml:"originalCurrencyName,attr"`*/
+	OriginalPrice int    `xml:"originalPrice,attr"`
+	TourUrl       string `xml:"tourUrl,attr"`
+	PriceType     int    `xml:"priceType,attr"`
+	Flags         int    `xml:"flags,attr"`
+	Hash          string `xml:"hash,attr"`
 
 	CreateDate string
 

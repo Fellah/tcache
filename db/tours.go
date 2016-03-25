@@ -48,7 +48,7 @@ func SaveTours(tours []sletat.Tour) {
 		"has_business_tickets_dpt",
 		"has_business_tickets_rtn",
 		"tour_name",
-		"hotel_name",
+		/*"hotel_name",
 		"town_name",
 		"star_name",
 		"meal_name",
@@ -63,13 +63,15 @@ func SaveTours(tours []sletat.Tour) {
 		"original_country_name",
 		"original_dptcity_name",
 		"original_currency_id",
-		"original_currency_name",
+		"original_currency_name",*/
 		"original_price",
 		"tour_url",
 		"price_type",
 		"flags",
 		"created_at",
 		"updated_at",
+
+		"active",
 
 		"dpt_city_id",
 
@@ -107,7 +109,7 @@ func SaveTours(tours []sletat.Tour) {
 			tour.HasBusinessTicketsDpt,
 			tour.HasBusinessTicketsRtn,
 			tour.TourName,
-			tour.HotelName,
+			/*tour.HotelName,
 			tour.TownName,
 			tour.StarName,
 			tour.MealName,
@@ -122,13 +124,15 @@ func SaveTours(tours []sletat.Tour) {
 			tour.OriginalCountryName,
 			tour.OriginalDptCityName,
 			tour.OriginalCurrencyId,
-			tour.OriginalCurrencyName,
+			tour.OriginalCurrencyName,*/
 			tour.OriginalPrice,
 			tour.TourUrl,
 			tour.PriceType,
 			tour.Flags,
 			tour.CreateDate,
 			tour.UpdateDate,
+
+			true,
 
 			tour.DptCityId,
 
