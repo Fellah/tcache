@@ -12,9 +12,8 @@ const WORKERS_NUM = 16
 var ticker = time.NewTicker(2 * time.Hour)
 
 func Start() {
-	for {
+	for _ := range ticker.C {
 		Pipe()
-		<-ticker.C
 	}
 }
 
