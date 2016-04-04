@@ -26,6 +26,7 @@ type Tour struct {
 	StarId                int    `xml:"starId,attr"`
 	MealId                int    `xml:"mealId,attr"`
 	RoomId                int    `xml:"roomId,attr"`
+	RoomName              string `xml:"roomName,attr"`
 	HtplaceId             int    `xml:"htplaceId,attr"`
 	HotelIsInStop         int    `xml:"hotelIsInStop,attr"`
 	TicketsIncluded       int    `xml:"ticketsIncluded,attr"`
@@ -34,27 +35,11 @@ type Tour struct {
 	HasBusinessTicketsDpt int    `xml:"hasBusinessTicketsDpt,attr"`
 	HasBusinessTicketsRtn int    `xml:"hasBusinessTicketsRtn,attr"`
 	TourName              string `xml:"tourName,attr"`
-	/*HotelName             string `xml:"hotelName,attr"`
-	TownName              string `xml:"townName,attr"`
-	StarName              string `xml:"starName,attr"`
-	MealName              string `xml:"mealName,attr"`
-	RoomName              string `xml:"roomName,attr"`
-	HtplaceName           string `xml:"htplaceName,attr"`
-	OriginalHotelName     string `xml:"originalHotelName,attr"`
-	OriginalTownName      string `xml:"originalTownName,attr"`
-	OriginalStarName      string `xml:"originalStarName,attr"`
-	OriginalMealName      string `xml:"originalMealName,attr"`
-	OriginalRoomName      string `xml:"originalRoomName,attr"`
-	OriginalHtplaceName   string `xml:"originalHtplaceName,attr"`
-	OriginalCountryName   string `xml:"originalCountryName,attr"`
-	OriginalDptCityName   string `xml:"originalDptCityName,attr"`
-	OriginalCurrencyId    int    `xml:"originalCurrencyId,attr"`
-	OriginalCurrencyName  string `xml:"originalCurrencyName,attr"`*/
-	OriginalPrice int    `xml:"originalPrice,attr"`
-	TourUrl       string `xml:"tourUrl,attr"`
-	PriceType     int    `xml:"priceType,attr"`
-	Flags         int    `xml:"flags,attr"`
-	Hash          string `xml:"hash,attr"`
+	OriginalPrice         int    `xml:"originalPrice,attr"`
+	TourUrl               string `xml:"tourUrl,attr"`
+	PriceType             int    `xml:"priceType,attr"`
+	Flags                 int    `xml:"flags,attr"`
+	Hash                  string `xml:"hash,attr"`
 
 	CreateDate string
 
