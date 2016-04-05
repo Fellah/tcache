@@ -114,6 +114,7 @@ func SaveTours(tours []sletat.Tour) {
 		)
 		if err != nil {
 			log.Println(err)
+			log.Printf("%+v", tour)
 		}
 	}
 
