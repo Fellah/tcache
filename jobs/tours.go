@@ -33,6 +33,7 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	tour.CreateDate = packet.CreateDate
 
 	tour.DptCityId = packet.DptCityId
+	tour.CountryId = packet.CountryId
 
 	if operator, ok := operators[tour.SourceId]; ok {
 		// BYR = RUB * exchange rate

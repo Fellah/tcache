@@ -36,6 +36,9 @@ func SaveTours(tours []sletat.Tour) {
 		"nights",
 		"adults",
 		"kids",
+		"kid1age",
+		"kid2age",
+		"kid3age",
 		"hotel_id",
 		"town_id",
 		"star_id",
@@ -60,6 +63,7 @@ func SaveTours(tours []sletat.Tour) {
 		"active",
 
 		"dpt_city_id",
+		"country_id",
 
 		"price_byr",
 		"price_eur",
@@ -83,6 +87,9 @@ func SaveTours(tours []sletat.Tour) {
 			tour.Nights,
 			tour.Adults,
 			tour.Kids,
+			tour.Kid1Age,
+			tour.Kid2Age,
+			tour.Kid3Age,
 			tour.HotelId,
 			tour.TownId,
 			tour.StarId,
@@ -107,6 +114,7 @@ func SaveTours(tours []sletat.Tour) {
 			true,
 
 			tour.DptCityId,
+			tour.CountryId,
 
 			tour.PriceByr,
 			tour.PriceEur,

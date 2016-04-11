@@ -23,7 +23,6 @@ type GetPacketList struct {
 }
 
 type PacketInfo struct {
-	//XMLName      xml.Name `xml:"PacketInfo"`
 	CountryId    int    `xml:"CountryId"`
 	CreateDate   string `xml:"CreateDate"`
 	DateTimeFrom string `xml:"DateTimeFrom"`
