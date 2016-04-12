@@ -32,7 +32,7 @@ type PacketInfo struct {
 	SourceId     int    `xml:"SourceId"`
 }
 
-func FetchPacketsList(date string, chPacket chan<- PacketInfo) error {
+func FetchPacketsList(date string) (chan PacketInfo, error) {
 	var buf bytes.Buffer
 	var packet PacketInfo
 
@@ -42,12 +42,12 @@ func FetchPacketsList(date string, chPacket chan<- PacketInfo) error {
 
 	enc := xml.NewEncoder(&buf)
 	if err := enc.Encode(request); err != nil {
-		return err
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, URL, &buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "text/xml;charset=UTF-8")
@@ -55,29 +55,43 @@ func FetchPacketsList(date string, chPacket chan<- PacketInfo) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer resp.Body.Close()
 
-	decoder := xml.NewDecoder(resp.Body)
-	for {
-		t, err := decoder.Token()
-		if err != nil && err.Error() != "EOF" {
-			log.Println(err)
-		}
 
-		if t == nil {
-			break
-		}
+	packets := make(chan PacketInfo)
+	go func() {
+		defer resp.Body.Close()
+		defer close(packets)
 
-		switch se := t.(type) {
-		case xml.StartElement:
-			if se.Name.Local == "PacketInfo" {
-				decoder.DecodeElement(&packet, &se)
-				chPacket <- packet
+		i := 0
+
+		decoder := xml.NewDecoder(resp.Body)
+		for {
+			if i > 5 {
+				return
 			}
-		}
-	}
 
-	return nil
+			t, err := decoder.Token()
+			if err != nil && err.Error() != "EOF" {
+				log.Println(err)
+			}
+
+			if t == nil {
+				break
+			}
+
+			switch se := t.(type) {
+			case xml.StartElement:
+				if se.Name.Local == "PacketInfo" {
+					decoder.DecodeElement(&packet, &se)
+					packets <- packet
+				}
+			}
+
+			i++
+		}
+	}()
+
+	return packets, nil
 }

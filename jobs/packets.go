@@ -7,18 +7,14 @@ import (
 	"github.com/fellah/tcache/sletat"
 )
 
-func fetchPackets(t time.Time) <-chan sletat.PacketInfo {
+func fetchPackets(t time.Time) chan sletat.PacketInfo {
 	log.Println("Download packets from", t.Format(time.RFC3339))
 
-	chPacket := make(chan sletat.PacketInfo)
+	packets, err := sletat.FetchPacketsList(t.Format(time.RFC3339))
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
 
-	go func(chPacket chan sletat.PacketInfo) {
-		err := sletat.FetchPacketsList(t.Format(time.RFC3339), chPacket)
-		if err != nil {
-			log.Fatal(err)
-		}
-		close(chPacket)
-	}(chPacket)
-
-	return chPacket
+	return packets
 }

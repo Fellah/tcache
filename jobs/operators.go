@@ -14,7 +14,7 @@ type Operator struct {
 
 var operators map[int]Operator
 
-func QueryOperators() {
+func queryOperators() {
 	rawOperators, err := db.QueryOperators()
 	if err != nil {
 		log.Fatal(err)
