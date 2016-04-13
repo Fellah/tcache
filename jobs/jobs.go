@@ -3,11 +3,8 @@ package jobs
 import (
 	"time"
 
-	//"github.com/fellah/tcache/db"
-	//"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/db"
 )
-
-const WORKERS_NUM = 16
 
 var ticker = time.NewTicker(2 * time.Hour)
 
@@ -32,6 +29,8 @@ func Pipe() {
 	// Set time to the hour begin.
 	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 
+	db.RemoveExistTours(t)
+
 	packets := fetchPackets(t)
 
 	tours := fetchTours(packets)
@@ -39,48 +38,4 @@ func Pipe() {
 	end := saveTours(tours)
 
 	finalize(end)
-
-	/*for tour := range rawTours {
-		log.Println("tour.TourName", tour.TourName)
-	}*/
-
-	/*for {
-		_, ok := <- rawTours
-		if !ok {
-			break
-		}
-	}*/
-
-	//end := saveTours(tours)
-
-	//finalize(end)
-
-
-
-
-
-
-
-
-
-
-	/*tours := make(chan sletat.Tour)
-	{
-		var wg sync.WaitGroup
-		wg.Add(WORKERS_NUM)
-		go func() {
-			wg.Wait()
-			close(tours)
-		}()
-
-		for i := 0; i < WORKERS_NUM; i++ {
-			go fetchTours(chPacket, tours, wg)
-		}
-	}
-
-	db.RemoveExistTours(t)
-
-	end := saveTours(tours)
-
-	finalize(end)*/
 }

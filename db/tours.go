@@ -10,7 +10,7 @@ import (
 )
 
 func RemoveExistTours(t time.Time) {
-	_, err := db.Query(`DELETE FROM cached_sletat_tours WHERE created_at >= $1`, t)
+	_, err := db.Query("DELETE FROM cached_sletat_tours WHERE created_at >= $1", t)
 	if err != nil {
 		log.Println(err)
 	}
@@ -142,4 +142,38 @@ func SaveTours(tours []sletat.Tour) {
 		log.Println(err)
 		return
 	}
+}
+
+func VacuumTours() {
+	_, err := db.Exec("VACUUM (FULL, FREEZE, VERBOSE, ANALYZE) cached_sletat_tours")
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func AgregateTours() {
+	rows, err := db.Query(`
+	SELECT
+		country_id,
+		MIN(price) as price
+	FROM cached_sletat_tours
+	GROUP BY country_id
+	ORDER BY min(price) ASC`)
+	if err != nil {
+		log.Println(err)
+	}
+
+	for rows.Next() {
+		var countryId int
+		var price int
+
+		err = rows.Scan(&countryId, &price)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		log.Println("#", countryId, price)
+	}
+
 }

@@ -64,14 +64,8 @@ func FetchPacketsList(date string) (chan PacketInfo, error) {
 		defer resp.Body.Close()
 		defer close(packets)
 
-		i := 0
-
 		decoder := xml.NewDecoder(resp.Body)
 		for {
-			if i > 5 {
-				return
-			}
-
 			t, err := decoder.Token()
 			if err != nil && err.Error() != "EOF" {
 				log.Println(err)
@@ -88,8 +82,6 @@ func FetchPacketsList(date string) (chan PacketInfo, error) {
 					packets <- packet
 				}
 			}
-
-			i++
 		}
 	}()
 
