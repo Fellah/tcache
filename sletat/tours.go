@@ -3,7 +3,8 @@ package sletat
 import (
 	"compress/gzip"
 	"encoding/xml"
-	"log"
+
+	"github.com/fellah/tcache/log"
 )
 
 const (
@@ -58,7 +59,7 @@ func FetchTours(packetId string) (chan Tour, error) {
 	var tour Tour
 
 	url := BULK_CACHE_URL + packetId
-	log.Println("Download:", url)
+	log.Info.Println("Download:", url)
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -80,7 +81,7 @@ func FetchTours(packetId string) (chan Tour, error) {
 		for {
 			t, err := decoder.Token()
 			if err != nil && err.Error() != "EOF" {
-				log.Println(err)
+				log.Error.Println(err)
 			}
 
 			if t == nil {

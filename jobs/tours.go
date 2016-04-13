@@ -1,17 +1,16 @@
 package jobs
 
 import (
-	"log"
 	"sync"
 
-	//"github.com/fellah/tcache/db"
-	"github.com/fellah/tcache/sletat"
 	"github.com/fellah/tcache/db"
+	"github.com/fellah/tcache/log"
+	"github.com/fellah/tcache/sletat"
 )
 
 const (
-	WORKERS_NUM = 1
-	BULK_SIZE = 2
+	WORKERS_NUM = 16
+	BULK_SIZE   = 516
 )
 
 func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
@@ -24,19 +23,27 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	for i := 0; i < WORKERS_NUM; i++ {
 		go func() {
 			for packet := range packets {
-				tours, err := sletat.FetchTours(packet.Id)
+				tours, err := tryGetToursChannel(packet.Id)
 				if err != nil {
-					log.Println(err)
+					log.Error.Println(err)
 					continue
 				}
 
 				for tour := range tours {
+					if tour.TicketsIncluded != 1 {
+						continue
+					}
+
+					if tour.HotelIsInStop != 0 && tour.HotelIsInStop != 2 {
+						continue
+					}
+
 					processTour(packet, &tour)
 					out <- tour
 				}
 
 				// TODO: Remove.
-				break
+				//break
 			}
 
 			wg.Done()
@@ -49,6 +56,22 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	}()
 
 	return out
+}
+
+func tryGetToursChannel(packetId string) (chan sletat.Tour, error) {
+	var err error
+
+	for i := 0; i < 3; i++ {
+		tours, err := sletat.FetchTours(packetId)
+		if err != nil {
+			log.Info.Println(packetId, i, err)
+			continue
+		} else {
+			return tours, nil
+		}
+	}
+
+	return nil, err
 }
 
 func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
@@ -64,6 +87,12 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 		tour.PriceEur = int(float64(tour.PriceByr) * operator.ExchangeRateEur)
 		// USD = BYR * exchange rate
 		tour.PriceUsd = int(float64(tour.PriceByr) * operator.ExchangeRateUsd)
+
+		if tour.PriceByr >= 2147483647 {
+			log.Debug.Println(packet.Id, tour.SourceId, tour.Price, tour.PriceByr, tour.PriceEur, tour.PriceUsd)
+			log.Debug.Printf("%+v", tour)
+			panic("!!!")
+		}
 	}
 }
 
@@ -91,9 +120,10 @@ func finalize(end <-chan bool) {
 	go func() {
 		<-end
 
+		db.RemoveExpiredTours()
 		db.VacuumTours()
 		db.AgregateTours()
 
-		log.Println("END")
+		log.Info.Println("END")
 	}()
 }

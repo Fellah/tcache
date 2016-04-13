@@ -19,7 +19,7 @@ func RemoveExistTours(t time.Time) {
 func SaveTours(tours []sletat.Tour) {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Println(err)
+		log.Println("a", err)
 		return
 	}
 
@@ -70,7 +70,7 @@ func SaveTours(tours []sletat.Tour) {
 		"price_usd",
 	))
 	if err != nil {
-		log.Println(err)
+		log.Println("b", err)
 		return
 	}
 
@@ -121,14 +121,15 @@ func SaveTours(tours []sletat.Tour) {
 			tour.PriceUsd,
 		)
 		if err != nil {
-			log.Println(err)
-			log.Printf("%+v", tour)
+			log.Println("c", err)
+			//log.Printf("%+v", tour)
 		}
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		log.Println(err)
+		//log.Printf("%+v", tours)
+		log.Println("d", err)
 		return
 	}
 
@@ -139,8 +140,18 @@ func SaveTours(tours []sletat.Tour) {
 
 	err = txn.Commit()
 	if err != nil {
-		log.Println(err)
+		log.Println("e", err)
 		return
+	}
+}
+
+func RemoveExpiredTours() {
+	t := time.Now().UTC()
+	t = t.Add(-48 * time.Hour) // 2 days ago.
+
+	_, err := db.Query("DELETE FROM cached_sletat_tours WHERE created_at >= $1", t)
+	if err != nil {
+		log.Println(err)
 	}
 }
 
