@@ -1,25 +1,25 @@
 package db
 
 import (
-	"log"
 	"time"
 
 	"github.com/lib/pq"
 
+	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 )
 
 func RemoveExistTours(t time.Time) {
 	_, err := db.Query("DELETE FROM cached_sletat_tours WHERE created_at >= $1", t)
 	if err != nil {
-		log.Println(err)
+		log.Error.Println(err)
 	}
 }
 
 func SaveTours(tours []sletat.Tour) {
 	txn, err := db.Begin()
 	if err != nil {
-		log.Println("a", err)
+		log.Error.Println(err)
 		return
 	}
 
@@ -46,6 +46,7 @@ func SaveTours(tours []sletat.Tour) {
 		"room_id",
 		"room_name",
 		"htplace_id",
+		"htplace_name",
 		"hotel_is_in_stop",
 		"tickets_included",
 		"has_econom_tickets_dpt",
@@ -70,7 +71,7 @@ func SaveTours(tours []sletat.Tour) {
 		"price_usd",
 	))
 	if err != nil {
-		log.Println("b", err)
+		log.Error.Println(err)
 		return
 	}
 
@@ -97,6 +98,7 @@ func SaveTours(tours []sletat.Tour) {
 			tour.RoomId,
 			tour.RoomName,
 			tour.HtplaceId,
+			tour.HtplaceName,
 			tour.HotelIsInStop,
 			tour.TicketsIncluded,
 			tour.HasEconomTicketsDpt,
@@ -121,15 +123,13 @@ func SaveTours(tours []sletat.Tour) {
 			tour.PriceUsd,
 		)
 		if err != nil {
-			log.Println("c", err)
-			//log.Printf("%+v", tour)
+			log.Error.Println(err)
 		}
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		//log.Printf("%+v", tours)
-		log.Println("d", err)
+		log.Error.Println(err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func SaveTours(tours []sletat.Tour) {
 
 	err = txn.Commit()
 	if err != nil {
-		log.Println("e", err)
+		log.Error.Println(err)
 		return
 	}
 }
@@ -149,16 +149,16 @@ func RemoveExpiredTours() {
 	t := time.Now().UTC()
 	t = t.Add(-48 * time.Hour) // 2 days ago.
 
-	_, err := db.Query("DELETE FROM cached_sletat_tours WHERE created_at >= $1", t)
+	_, err := db.Query("DELETE FROM cached_sletat_tours WHERE created_at <= $1", t)
 	if err != nil {
-		log.Println(err)
+		log.Error.Println(err)
 	}
 }
 
 func VacuumTours() {
 	_, err := db.Exec("VACUUM (FULL, FREEZE, VERBOSE, ANALYZE) cached_sletat_tours")
 	if err != nil {
-		log.Println(err)
+		log.Error.Println(err)
 	}
 }
 
@@ -166,25 +166,83 @@ func AgregateTours() {
 	rows, err := db.Query(`
 	SELECT
 		country_id,
-		MIN(price) as price
+		MIN(price) as price,
+		price_byr,
+		price_eur,
+		price_usd
 	FROM cached_sletat_tours
-	GROUP BY country_id
+	GROUP BY country_id, price_byr, price_eur, price_usd
 	ORDER BY min(price) ASC`)
 	if err != nil {
-		log.Println(err)
+		log.Error.Println(err)
+		return
 	}
 
-	for rows.Next() {
-		var countryId int
-		var price int
+	defer rows.Close()
 
-		err = rows.Scan(&countryId, &price)
+	var countryId int
+	var price int
+	var priceByr int64
+	var priceEur int
+	var priceUsd int
+
+	for rows.Next() {
+		err = rows.Scan(&countryId, &price, &priceByr, &priceEur, &priceUsd)
 		if err != nil {
-			log.Println(err)
+			log.Error.Println(err)
 			continue
 		}
 
-		log.Println("#", countryId, price)
+		if isAgregateToursExist(countryId, "country") {
+			err := db.QueryRow(`
+			UPDATE agregate_data_for_cached_sletat_tours
+			SET price = $3, price_byr = $4, price_eur = $5, price_usd = $5
+			WHERE agregate_item_id = $1 AND agregate_for_type = $2`, countryId, "country", price, priceByr, priceEur, priceUsd)
+			if err != nil {
+				log.Debug.Println(err)
+				continue
+			}
+		} else {
+			err := db.QueryRow(`
+			INSERT INTO agregate_data_for_cached_sletat_tours(
+				agregate_item_id,
+				agregate_for_type,
+				price,
+				price_byr,
+				price_eur,
+				price_usd
+			) VALUES($1, $2, $3, $4, $5, $6)`, countryId, "country", price, priceByr, priceEur, priceUsd)
+			if err != nil {
+				log.Debug.Println(err)
+				continue
+			}
+		}
+	}
+}
+
+func isAgregateToursExist(id int, t string) bool {
+	res := false
+
+	rows, err := db.Query(`
+		SELECT COUNT(agregate_item_id)
+		FROM agregate_data_for_cached_sletat_tours
+		WHERE agregate_item_id = $1 AND agregate_for_type = $2`, id, t)
+	if err != nil {
+		log.Error.Println(err)
+		return res
 	}
 
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		rows.Scan(&count)
+	}
+
+	if count > 0 {
+		res = true
+	}
+
+	return res
 }

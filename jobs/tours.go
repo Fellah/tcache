@@ -41,9 +41,6 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 					processTour(packet, &tour)
 					out <- tour
 				}
-
-				// TODO: Remove.
-				//break
 			}
 
 			wg.Done()
@@ -81,8 +78,8 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	tour.CountryId = packet.CountryId
 
 	if operator, ok := operators[tour.SourceId]; ok {
-		// BYR = RUB * exchange rate
-		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur)
+		// BYR = RUB * exchange rate / 1000
+		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur) / 1000
 		// EUR = BYR * exchange rate
 		tour.PriceEur = int(float64(tour.PriceByr) * operator.ExchangeRateEur)
 		// USD = BYR * exchange rate
@@ -91,7 +88,6 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 		if tour.PriceByr >= 2147483647 {
 			log.Debug.Println(packet.Id, tour.SourceId, tour.Price, tour.PriceByr, tour.PriceEur, tour.PriceUsd)
 			log.Debug.Printf("%+v", tour)
-			panic("!!!")
 		}
 	}
 }
@@ -108,6 +104,7 @@ func saveTours(tours <-chan sletat.Tour) <-chan bool {
 				toursBulk = make([]sletat.Tour, 0, BULK_SIZE)
 			}
 		}
+		db.SaveTours(toursBulk)
 
 		end <- true
 		close(end)
@@ -120,7 +117,7 @@ func finalize(end <-chan bool) {
 	go func() {
 		<-end
 
-		db.RemoveExpiredTours()
+		//db.RemoveExpiredTours()
 		db.VacuumTours()
 		db.AgregateTours()
 

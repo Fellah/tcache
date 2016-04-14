@@ -32,6 +32,7 @@ type Tour struct {
 	RoomId                int    `xml:"roomId,attr"`
 	RoomName              string `xml:"roomName,attr"`
 	HtplaceId             int    `xml:"htplaceId,attr"`
+	HtplaceName           string `xml:"htplaceName,attr"`
 	HotelIsInStop         int    `xml:"hotelIsInStop,attr"`
 	TicketsIncluded       int    `xml:"ticketsIncluded,attr"`
 	HasEconomTicketsDpt   int    `xml:"hasEconomTicketsDpt,attr"`
