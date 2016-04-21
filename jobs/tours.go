@@ -78,17 +78,12 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	tour.CountryId = packet.CountryId
 
 	if operator, ok := operators[tour.SourceId]; ok {
-		// BYR = RUB * exchange rate / 1000
-		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur) / 1000
+		// BYR = RUB * exchange rate
+		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur)
 		// EUR = BYR * exchange rate
 		tour.PriceEur = int(float64(tour.PriceByr) * operator.ExchangeRateEur)
 		// USD = BYR * exchange rate
 		tour.PriceUsd = int(float64(tour.PriceByr) * operator.ExchangeRateUsd)
-
-		if tour.PriceByr >= 2147483647 {
-			log.Debug.Println(packet.Id, tour.SourceId, tour.Price, tour.PriceByr, tour.PriceEur, tour.PriceUsd)
-			log.Debug.Printf("%+v", tour)
-		}
 	}
 }
 
