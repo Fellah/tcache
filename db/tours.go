@@ -162,7 +162,7 @@ func VacuumTours() {
 	}
 }
 
-func AgregateTours() {
+func AgregateToursByCountry() {
 	rows, err := db.Query(`
 	SELECT
 		country_id,
@@ -199,7 +199,7 @@ func AgregateTours() {
 			SET price = $3, price_byr = $4, price_eur = $5, price_usd = $5
 			WHERE agregate_item_id = $1 AND agregate_for_type = $2`, countryId, "country", price, priceByr, priceEur, priceUsd)
 			if err != nil {
-				log.Debug.Println(err)
+				//log.Debug.Println(err)
 				continue
 			}
 		} else {
@@ -213,7 +213,65 @@ func AgregateTours() {
 				price_usd
 			) VALUES($1, $2, $3, $4, $5, $6)`, countryId, "country", price, priceByr, priceEur, priceUsd)
 			if err != nil {
-				log.Debug.Println(err)
+				//log.Debug.Println(err)
+				continue
+			}
+		}
+	}
+}
+
+func AgregateToursByHotel() {
+	rows, err := db.Query(`
+	SELECT
+		hotel_id,
+		MIN(price) as price,
+		price_byr,
+		price_eur,
+		price_usd
+	FROM cached_sletat_tours
+	GROUP BY country_id, price_byr, price_eur, price_usd
+	ORDER BY min(price) ASC`)
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
+
+	defer rows.Close()
+
+	var hotelId int
+	var price int
+	var priceByr int64
+	var priceEur int
+	var priceUsd int
+
+	for rows.Next() {
+		err = rows.Scan(&hotelId, &price, &priceByr, &priceEur, &priceUsd)
+		if err != nil {
+			log.Error.Println(err)
+			continue
+		}
+
+		if isAgregateToursExist(hotelId, "hotel") {
+			err := db.QueryRow(`
+			UPDATE agregate_data_for_cached_sletat_tours
+			SET price = $3, price_byr = $4, price_eur = $5, price_usd = $5
+			WHERE agregate_item_id = $1 AND agregate_for_type = $2`, hotelId, "hotel", price, priceByr, priceEur, priceUsd)
+			if err != nil {
+				//log.Debug.Println(err)
+				continue
+			}
+		} else {
+			err := db.QueryRow(`
+			INSERT INTO agregate_data_for_cached_sletat_tours(
+				agregate_item_id,
+				agregate_for_type,
+				price,
+				price_byr,
+				price_eur,
+				price_usd
+			) VALUES($1, $2, $3, $4, $5, $6)`, hotelId, "hotel", price, priceByr, priceEur, priceUsd)
+			if err != nil {
+				//log.Debug.Println(err)
 				continue
 			}
 		}

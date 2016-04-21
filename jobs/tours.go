@@ -10,7 +10,7 @@ import (
 
 const (
 	WORKERS_NUM = 16
-	BULK_SIZE   = 516
+	BULK_SIZE   = 256
 )
 
 func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
@@ -119,7 +119,8 @@ func finalize(end <-chan bool) {
 
 		//db.RemoveExpiredTours()
 		db.VacuumTours()
-		db.AgregateTours()
+		db.AgregateToursByCountry()
+		db.AgregateToursByHotel()
 
 		log.Info.Println("END")
 	}()
