@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"github.com/fellah/tcache/log"
 )
 
 type Operator struct {
@@ -12,7 +12,14 @@ type Operator struct {
 }
 
 func QueryOperators() ([]Operator, error) {
-	rows, err := db.Query("SELECT sletat_tour_operator_id, exchange_rate_usd, exchange_rate_eur, exchange_rate_rur FROM sletat_tour_operators")
+	rows, err := db.Query(`
+	SELECT
+		sletat_tour_operator_id,
+		exchange_rate_usd,
+		exchange_rate_eur,
+		exchange_rate_rur
+	FROM
+	sletat_tour_operators`)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +41,7 @@ func QueryOperators() ([]Operator, error) {
 			&exchangeRateRur,
 		)
 		if err != nil {
-			log.Println(err)
+			log.Error.Println(err)
 		}
 
 		operator := Operator{

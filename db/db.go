@@ -2,10 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
+
+	"github.com/fellah/tcache/log"
 )
 
 const (
@@ -22,20 +23,18 @@ func init() {
 
 	db_connection = os.Getenv(DB_CONNECTION)
 	if db_connection == "" {
-		log.Fatal()
+		log.Error.Fatalln()
 	}
-
-	log.Println(db_connection)
 
 	db, err = sql.Open("postgres", db_connection)
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatalln(err)
 	}
 }
 
 func Close() {
 	err := db.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 }
