@@ -47,8 +47,6 @@ func makeAggregation(aggrField string) {
 			continue
 		}
 
-		log.Debug.Println(aggrId)
-
 		saveAggregation(aggrId, aggrField, price, priceByr, priceEur, priceUsd)
 	}
 }
