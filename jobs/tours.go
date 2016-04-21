@@ -112,10 +112,9 @@ func finalize(end <-chan bool) {
 	go func() {
 		<-end
 
-		//db.RemoveExpiredTours()
+		db.RemoveExpiredTours()
 		db.VacuumTours()
-		db.AgregateToursByCountry()
-		db.AgregateToursByHotel()
+		db.MakeAggregation()
 
 		log.Info.Println("END")
 	}()
