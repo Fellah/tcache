@@ -16,17 +16,17 @@ func MakeAggregation() {
 	}
 }
 
-func makeAggregation(field string) {
+func makeAggregation(aggrField string) {
 	rows, err := db.Query(`
 	SELECT
-		$1,
+		` + aggrField + `,
 		MIN(price) as price,
 		price_byr,
 		price_eur,
 		price_usd
 	FROM cached_sletat_tours
-	GROUP BY $1, price_byr, price_eur, price_usd
-	ORDER BY min(price) ASC`, field)
+	GROUP BY ` + aggrField + `, price_byr, price_eur, price_usd
+	ORDER BY min(price) ASC`)
 	if err != nil {
 		log.Error.Println(err)
 		return
@@ -34,20 +34,22 @@ func makeAggregation(field string) {
 
 	defer rows.Close()
 
-	var hotelId int
+	var aggrId int
 	var price int
 	var priceByr int64
 	var priceEur int
 	var priceUsd int
 
 	for rows.Next() {
-		err = rows.Scan(&hotelId, &price, &priceByr, &priceEur, &priceUsd)
+		err = rows.Scan(&aggrId, &price, &priceByr, &priceEur, &priceUsd)
 		if err != nil {
 			log.Error.Println(err)
 			continue
 		}
 
-		saveAggregation(hotelId, field, price, priceByr, priceEur, priceUsd)
+		log.Debug.Println(aggrId)
+
+		saveAggregation(aggrId, aggrField, price, priceByr, priceEur, priceUsd)
 	}
 }
 

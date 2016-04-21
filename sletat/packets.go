@@ -3,8 +3,9 @@ package sletat
 import (
 	"bytes"
 	"encoding/xml"
-	"log"
 	"net/http"
+
+	"github.com/fellah/tcache/log"
 )
 
 var request = Request{
@@ -58,7 +59,6 @@ func FetchPacketsList(date string) (chan PacketInfo, error) {
 		return nil, err
 	}
 
-
 	packets := make(chan PacketInfo)
 	go func() {
 		defer resp.Body.Close()
@@ -68,7 +68,7 @@ func FetchPacketsList(date string) (chan PacketInfo, error) {
 		for {
 			t, err := decoder.Token()
 			if err != nil && err.Error() != "EOF" {
-				log.Println(err)
+				log.Error.Println(err)
 			}
 
 			if t == nil {
