@@ -15,10 +15,6 @@ func Start() {
 	}
 }
 
-func Stop() {
-	ticker.Stop()
-}
-
 func Pipe() {
 	queryOperators()
 
@@ -29,6 +25,7 @@ func Pipe() {
 	// Set time to the hour begin.
 	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 
+	db.RemoveExpiredTours()
 	db.RemoveExistTours(t)
 
 	packets := fetchPackets(t)
@@ -38,4 +35,9 @@ func Pipe() {
 	end := saveTours(tours)
 
 	finalize(end)
+}
+
+func End() {
+	db.Close()
+	ticker.Stop()
 }
