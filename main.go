@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/fellah/stop"
 
-	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/jobs"
+	"github.com/fellah/tcache/log"
 )
 
 func main() {
@@ -14,8 +12,6 @@ func main() {
 
 	<-stop.Ch
 
-	db.Close()
-	jobs.Stop()
-
-	fmt.Println("done")
+	jobs.End()
+	log.Info.Println("EXIT")
 }

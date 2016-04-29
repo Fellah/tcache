@@ -9,30 +9,35 @@ import (
 	"github.com/fellah/tcache/log"
 )
 
-const (
-	DB_CONNECTION = "DB_CONNECTION"
-)
+const DB_CONNECTION = "DB_CONNECTION"
 
 var (
-	db_connection string
-	db            *sql.DB
+	db *sql.DB
 )
 
 func init() {
-	var err error
+	db = Connect()
+}
 
-	db_connection = os.Getenv(DB_CONNECTION)
-	if db_connection == "" {
+func Connect() *sql.DB {
+	dbConnection := os.Getenv(DB_CONNECTION)
+	if dbConnection == "" {
 		log.Error.Fatalln()
 	}
 
-	db, err = sql.Open("postgres", db_connection)
+	db, err := sql.Open("postgres", dbConnection)
 	if err != nil {
 		log.Error.Fatalln(err)
 	}
+
+	return db
 }
 
 func Close() {
+	if db == nil {
+		return
+	}
+
 	err := db.Close()
 	if err != nil {
 		log.Error.Fatal(err)
