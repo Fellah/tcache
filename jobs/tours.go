@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/log"
@@ -12,6 +13,8 @@ const (
 	WORKERS_NUM = 16
 	BULK_SIZE   = 2048
 )
+
+var toursCount uint64 = 0
 
 func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	out := make(chan sletat.Tour)
@@ -39,6 +42,7 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 					}
 
 					processTour(packet, &tour)
+					atomic.AddUint64(&toursCount, 1)
 					out <- tour
 				}
 			}
@@ -112,7 +116,10 @@ func finalize(end <-chan bool) {
 	go func() {
 		<-end
 
-		db.VacuumTours()
+		//db.VacuumTours()
+
+		log.Info.Println("Downloaded tours:", atomic.LoadUint64(&toursCount))
+		atomic.StoreUint64(&toursCount, 0)
 
 		log.Info.Println("END")
 	}()

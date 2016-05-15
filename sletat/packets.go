@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"net/http"
-
-	"github.com/fellah/tcache/log"
 )
 
 var request = Request{
@@ -33,9 +31,10 @@ type PacketInfo struct {
 	SourceId     int    `xml:"SourceId"`
 }
 
-func FetchPacketsList(date string) (chan PacketInfo, error) {
+//func FetchPacketsList(date string) (chan PacketInfo, error) {
+func FetchPacketsList(date string) ([]PacketInfo, error) {
 	var buf bytes.Buffer
-	var packet PacketInfo
+	//var packet PacketInfo
 
 	request.Body.SOAPAction = GetPacketList{
 		CreateDatePoint: date,
@@ -58,32 +57,24 @@ func FetchPacketsList(date string) (chan PacketInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	packets := make(chan PacketInfo)
-	go func() {
-		defer resp.Body.Close()
-		defer close(packets)
-
-		decoder := xml.NewDecoder(resp.Body)
-		for {
-			t, err := decoder.Token()
-			if err != nil && err.Error() != "EOF" {
-				log.Error.Println(err)
-			}
-
-			if t == nil {
-				break
-			}
-
-			switch se := t.(type) {
-			case xml.StartElement:
-				if se.Name.Local == "PacketInfo" {
-					decoder.DecodeElement(&packet, &se)
-					packets <- packet
+	envelope := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			XMLName               xml.Name `xml:"Body"`
+			GetPacketListResponse struct {
+				XMLName             xml.Name `xml:"GetPacketListResponse"`
+				GetPacketListResult struct {
+					XMLName    xml.Name `xml:"GetPacketListResult"`
+					PacketInfo []PacketInfo
 				}
 			}
 		}
-	}()
+	}{}
+	if err = xml.NewDecoder(resp.Body).Decode(&envelope); err != nil {
+		return nil, err
+	}
 
-	return packets, nil
+	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo, nil
 }
