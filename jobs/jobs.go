@@ -4,9 +4,12 @@ import (
 	"time"
 
 	"github.com/fellah/tcache/db"
+	"github.com/avialeta/api/log"
 )
 
-var ticker = time.NewTicker(2 * time.Hour)
+var (
+	ticker = time.NewTicker(2 * time.Hour)
+)
 
 func Start() {
 	for {
@@ -17,27 +20,46 @@ func Start() {
 
 func Pipe() {
 	queryOperators()
+	queryCities()
 
-	t := time.Now().UTC()
-	t = t.Add(3 * time.Hour)  // UTC +3h
-	t = t.Add(-2 * time.Hour) // 2 hour
+	t, err := makeDownloadTime()
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
 
-	// Set time to the hour begin.
-	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+	stat := new(statistic)
 
-	db.RemoveExpiredTours()
-	db.RemoveExistTours(t)
+	//db.RemoveExpiredTours()
+	//db.RemoveExistTours(t)
 
-	packets := fetchPackets(t)
+	packets := fetchPackets(t, stat)
 
-	tours := fetchTours(packets)
+	tours := fetchTours(packets, stat)
 
-	end := saveTours(tours)
+	end := saveTours(tours, stat)
 
-	finalize(end)
+	finalize(end, stat)
 }
 
 func End() {
 	db.Close()
 	ticker.Stop()
+}
+
+func makeDownloadTime() (string, error) {
+	location, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return "", err
+	}
+
+	t := time.Now().In(location)
+	t = t.Add(-2 * time.Hour)  // UTC +3h (Moscow time)
+
+	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+
+	// Test code.
+	//t = t.Add(15 * time.Minute)  // UTC +3h (Moscow time)
+
+	return t.Format(time.RFC3339), nil
 }

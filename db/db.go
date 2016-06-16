@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -11,9 +12,7 @@ import (
 
 const DB_CONNECTION = "DB_CONNECTION"
 
-var (
-	db *sql.DB
-)
+var db *sql.DB
 
 func init() {
 	db = Connect()
@@ -29,6 +28,11 @@ func Connect() *sql.DB {
 	if err != nil {
 		log.Error.Fatalln(err)
 	}
+
+	// Config connections.
+	db.SetConnMaxLifetime(5 * time.Minute)
+	//db.SetMaxIdleConns(20)
+	db.SetMaxOpenConns(50)
 
 	return db
 }

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/xml"
 	"net/http"
+	"strconv"
+
+	"github.com/fellah/tcache/log"
 )
 
 var request = Request{
@@ -32,7 +35,7 @@ type PacketInfo struct {
 }
 
 //func FetchPacketsList(date string) (chan PacketInfo, error) {
-func FetchPacketsList(date string) ([]PacketInfo, error) {
+func FetchPacketsList(date string) ([]PacketInfo, uint64, error) {
 	var buf bytes.Buffer
 	//var packet PacketInfo
 
@@ -42,12 +45,12 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 
 	enc := xml.NewEncoder(&buf)
 	if err := enc.Encode(request); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, URL, &buf)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	req.Header.Add("Content-Type", "text/xml;charset=UTF-8")
@@ -55,9 +58,16 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
+
+	// Get size of downloaded packets XML file.
+	size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	if err != nil {
+		log.Error.Println()
+	}
+	downloadSize := uint64(size)
 
 	envelope := struct {
 		XMLName xml.Name `xml:"Envelope"`
@@ -73,8 +83,8 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 		}
 	}{}
 	if err = xml.NewDecoder(resp.Body).Decode(&envelope); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo, nil
+	return envelope.Body.GetPacketListResponse.GetPacketListResult.PacketInfo, downloadSize, nil
 }
