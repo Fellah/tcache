@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"sync"
-	"sync/atomic"
 
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/log"
@@ -14,9 +13,7 @@ const (
 	BULK_SIZE   = 2048
 )
 
-var toursCount uint64 = 0
-
-func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
+func fetchTours(packets <-chan sletat.PacketInfo, stat *statistic) chan sletat.Tour {
 	out := make(chan sletat.Tour)
 
 	wg := new(sync.WaitGroup)
@@ -26,23 +23,18 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	for i := 0; i < WORKERS_NUM; i++ {
 		go func() {
 			for packet := range packets {
-				tours, err := tryGetToursChannel(packet.Id)
+				tours, err := tryGetToursChannel(packet.Id, stat)
 				if err != nil {
 					log.Error.Println(err)
 					continue
 				}
 
 				for tour := range tours {
-					if tour.TicketsIncluded != 1 {
-						continue
-					}
-
-					if tour.HotelIsInStop != 0 && tour.HotelIsInStop != 2 {
+					if isSkipped(&tour) {
 						continue
 					}
 
 					processTour(packet, &tour)
-					atomic.AddUint64(&toursCount, 1)
 					out <- tour
 				}
 			}
@@ -59,17 +51,17 @@ func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	return out
 }
 
-func tryGetToursChannel(packetId string) (chan sletat.Tour, error) {
+func tryGetToursChannel(packetId string, stat *statistic) (chan sletat.Tour, error) {
 	var err error
 
 	for i := 0; i < 3; i++ {
-		tours, err := sletat.FetchTours(packetId)
+		tours, _, err := sletat.FetchTours(packetId)
 		if err != nil {
 			log.Info.Println(packetId, i, err)
 			continue
-		} else {
-			return tours, nil
 		}
+
+		return tours, nil
 	}
 
 	return nil, err
@@ -85,13 +77,21 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 		// BYR = RUB * exchange rate
 		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur)
 		// EUR = BYR * exchange rate
-		tour.PriceEur = int(float64(tour.PriceByr) * operator.ExchangeRateEur)
+		if tour.PriceEur > 0 {
+			tour.PriceEur = int(float64(tour.PriceByr) / operator.ExchangeRateEur)
+		} else {
+			tour.PriceEur = 0
+		}
 		// USD = BYR * exchange rate
-		tour.PriceUsd = int(float64(tour.PriceByr) * operator.ExchangeRateUsd)
+		if tour.PriceByr > 0 {
+			tour.PriceUsd = int(float64(tour.PriceByr) / operator.ExchangeRateUsd)
+		} else {
+			tour.PriceUsd = 0
+		}
 	}
 }
 
-func saveTours(tours <-chan sletat.Tour) <-chan bool {
+func saveTours(tours <-chan sletat.Tour, stat *statistic) <-chan bool {
 	end := make(chan bool)
 
 	go func() {
@@ -112,15 +112,35 @@ func saveTours(tours <-chan sletat.Tour) <-chan bool {
 	return end
 }
 
-func finalize(end <-chan bool) {
+// TODO: Add statistic.
+func isSkipped(tour *sletat.Tour) bool {
+	if !isCityActive(tour.TownId) {
+		return true
+	}
+
+	if !isDepartCityActive(tour.DptCityId) {
+		return true
+	}
+
+	if tour.TicketsIncluded != 1 {
+		return true
+	}
+
+	if tour.HotelIsInStop != 0 && tour.HotelIsInStop != 2 {
+		return true
+	}
+
+	return false
+}
+
+func finalize(end <-chan bool, stat *statistic) {
 	go func() {
 		<-end
 
 		//db.VacuumTours()
 
-		log.Info.Println("Downloaded tours:", atomic.LoadUint64(&toursCount))
-		atomic.StoreUint64(&toursCount, 0)
-
 		log.Info.Println("END")
+
+		stat.Output()
 	}()
 }
