@@ -5,7 +5,7 @@ import (
 )
 
 func QueryCities() ([]int, error) {
-	rows, err := db.Query("SELECT sletat_city_id FROM sletat_cities WHERE active = 't'")
+	rows, err := db.Query("SELECT sletat_city_id FROM sletat_cities WHERE active = true")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func QueryCities() ([]int, error) {
 }
 
 func QueryDepartCities() ([]int, error) {
-	rows, err := db.Query("SELECT sletat_depart_city_id FROM sletat_depart_cities WHERE active = 't'")
+	rows, err := db.Query("SELECT sletat_depart_city_id FROM sletat_depart_cities WHERE active = true")
 	if err != nil {
 		return nil, err
 	}

@@ -1,8 +1,6 @@
 package jobs
 
 import (
-	"sort"
-
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/log"
 )
@@ -24,12 +22,22 @@ func queryCities() {
 	}
 }
 
-func isCityActive(city_id int) bool {
-	idx := sort.SearchInts(citiesIds, city_id)
-	return !(idx == len(citiesIds))
+func isCityActive(cityId int) bool {
+	for _, activeCityId := range citiesIds {
+		if activeCityId == cityId {
+			return true
+		}
+	}
+
+	return false
 }
 
-func isDepartCityActive(city_id int) bool {
-	idx := sort.SearchInts(departCitiesIds, city_id)
-	return !(idx == len(departCitiesIds))
+func isDepartCityActive(cityId int) bool {
+	for _, activeCityId := range departCitiesIds {
+		if activeCityId == cityId {
+			return true
+		}
+	}
+
+	return false
 }
