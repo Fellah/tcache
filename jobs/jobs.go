@@ -3,8 +3,8 @@ package jobs
 import (
 	"time"
 
+	"github.com/fellah/go-helpers/log"
 	"github.com/fellah/tcache/db"
-	"github.com/avialeta/api/log"
 )
 
 var (
@@ -28,18 +28,16 @@ func Pipe() {
 		return
 	}
 
-	stat := new(statistic)
-
 	//db.RemoveExpiredTours()
 	//db.RemoveExistTours(t)
 
-	packets := fetchPackets(t, stat)
+	packets := fetchPackets(t)
 
-	tours := fetchTours(packets, stat)
+	tours := fetchTours(packets)
 
-	end := saveTours(tours, stat)
+	end := saveTours(tours)
 
-	finalize(end, stat)
+	finalize(end)
 }
 
 func End() {
@@ -53,13 +51,10 @@ func makeDownloadTime() (string, error) {
 		return "", err
 	}
 
-	t := time.Now().In(location)
-	t = t.Add(-2 * time.Hour)  // UTC +3h (Moscow time)
-
+	t := time.Now().In(location).Add(-2 * time.Hour)
 	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 
-	// Test code.
-	//t = t.Add(15 * time.Minute)  // UTC +3h (Moscow time)
+	//t := time.Now().In(location).Add(-5 * time.Minute)
 
 	return t.Format(time.RFC3339), nil
 }

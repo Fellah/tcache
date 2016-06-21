@@ -3,17 +3,17 @@ package jobs
 import (
 	"sync"
 
-	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/db"
 )
 
 const (
-	WORKERS_NUM = 16
-	BULK_SIZE   = 2048
+	WORKERS_NUM = 32
+	BULK_SIZE   = 516
 )
 
-func fetchTours(packets <-chan sletat.PacketInfo, stat *statistic) chan sletat.Tour {
+func fetchTours(packets <-chan sletat.PacketInfo) chan sletat.Tour {
 	out := make(chan sletat.Tour)
 
 	wg := new(sync.WaitGroup)
@@ -23,13 +23,15 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *statistic) chan sletat.T
 	for i := 0; i < WORKERS_NUM; i++ {
 		go func() {
 			for packet := range packets {
-				tours, err := tryGetToursChannel(packet.Id, stat)
+				tours, err := tryGetToursChannel(packet.Id)
 				if err != nil {
 					log.Error.Println(err)
 					continue
 				}
 
 				for tour := range tours {
+					preProcessTour(packet, &tour)
+
 					if isSkipped(&tour) {
 						continue
 					}
@@ -51,11 +53,11 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *statistic) chan sletat.T
 	return out
 }
 
-func tryGetToursChannel(packetId string, stat *statistic) (chan sletat.Tour, error) {
+func tryGetToursChannel(packetId string) (chan sletat.Tour, error) {
 	var err error
 
 	for i := 0; i < 3; i++ {
-		tours, _, err := sletat.FetchTours(packetId)
+		tours, err := sletat.FetchTours(packetId)
 		if err != nil {
 			log.Info.Println(packetId, i, err)
 			continue
@@ -67,23 +69,28 @@ func tryGetToursChannel(packetId string, stat *statistic) (chan sletat.Tour, err
 	return nil, err
 }
 
+func preProcessTour(packet sletat.PacketInfo, tour *sletat.Tour) {
+	tour.DptCityId = packet.DptCityId
+}
+
 func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	tour.CreateDate = packet.CreateDate
 
-	tour.DptCityId = packet.DptCityId
 	tour.CountryId = packet.CountryId
 
 	if operator, ok := operators[tour.SourceId]; ok {
 		// BYR = RUB * exchange rate
 		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur)
+
 		// EUR = BYR * exchange rate
-		if tour.PriceEur > 0 {
+		if tour.PriceEur > 0 && operator.ExchangeRateEur > 0 {
 			tour.PriceEur = int(float64(tour.PriceByr) / operator.ExchangeRateEur)
 		} else {
 			tour.PriceEur = 0
 		}
+
 		// USD = BYR * exchange rate
-		if tour.PriceByr > 0 {
+		if tour.PriceByr > 0 && operator.ExchangeRateUsd > 0 {
 			tour.PriceUsd = int(float64(tour.PriceByr) / operator.ExchangeRateUsd)
 		} else {
 			tour.PriceUsd = 0
@@ -91,7 +98,7 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	}
 }
 
-func saveTours(tours <-chan sletat.Tour, stat *statistic) <-chan bool {
+func saveTours(tours <-chan sletat.Tour) <-chan bool {
 	end := make(chan bool)
 
 	go func() {
@@ -112,13 +119,8 @@ func saveTours(tours <-chan sletat.Tour, stat *statistic) <-chan bool {
 	return end
 }
 
-// TODO: Add statistic.
 func isSkipped(tour *sletat.Tour) bool {
 	if !isCityActive(tour.TownId) {
-		return true
-	}
-
-	if !isDepartCityActive(tour.DptCityId) {
 		return true
 	}
 
@@ -133,14 +135,12 @@ func isSkipped(tour *sletat.Tour) bool {
 	return false
 }
 
-func finalize(end <-chan bool, stat *statistic) {
+func finalize(end <-chan bool) {
 	go func() {
 		<-end
 
 		//db.VacuumTours()
 
 		log.Info.Println("END")
-
-		stat.Output()
 	}()
 }

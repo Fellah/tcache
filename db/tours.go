@@ -39,13 +39,13 @@ func SaveTours(tours []sletat.Tour) {
 
 	err = stmt.Close()
 	if err != nil {
-		log.Error.Println(err)
+		log.Error.Println(err, query)
 		return
 	}
 
 	err = txn.Commit()
 	if err != nil {
-		log.Error.Println(err)
+		log.Error.Println(err, query)
 		return
 	}
 }

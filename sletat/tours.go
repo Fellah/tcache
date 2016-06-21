@@ -2,15 +2,12 @@ package sletat
 
 import (
 	"compress/gzip"
-	"strconv"
 	"encoding/xml"
 
 	"github.com/fellah/tcache/log"
 )
 
-const (
-	bulKCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
-)
+const bulKCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
 type Tour struct {
 	OfferId               int    `xml:"offerId,attr"`
@@ -57,7 +54,7 @@ type Tour struct {
 	PriceUsd int
 }
 
-func FetchTours(packetId string) (chan Tour, uint64, error) {
+func FetchTours(packetId string) (chan Tour, error) {
 	var tour Tour
 
 	url := bulKCacheUrl + packetId
@@ -65,19 +62,12 @@ func FetchTours(packetId string) (chan Tour, uint64, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-
-	// Get size of downloaded tours file.
-	size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-	if err != nil {
-		log.Error.Println()
-	}
-	downloadSize := uint64(size)
 
 	gzipReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	tours := make(chan Tour)
@@ -107,5 +97,5 @@ func FetchTours(packetId string) (chan Tour, uint64, error) {
 		}
 	}()
 
-	return tours, downloadSize, nil
+	return tours, nil
 }

@@ -5,25 +5,34 @@ import (
 	"github.com/fellah/tcache/sletat"
 )
 
-func fetchPackets(t string, stat *statistic) chan sletat.PacketInfo {
+func fetchPackets(t string) chan sletat.PacketInfo {
 	packets := make(chan sletat.PacketInfo)
 
 	go func() {
 		log.Info.Println("Download packets from", t)
-		packetsList, size, err := sletat.FetchPacketsList(t)
+		packetsList, err := sletat.FetchPacketsList(t)
 		if err != nil {
 			log.Error.Println(err)
 		}
 
 		for _, packet := range packetsList {
+			if skipPacket(&packet) {
+				continue
+			}
+
 			packets <- packet
 		}
-
-		stat.StorePacketsCount(uint64(len(packetsList)))
-		stat.StorePacketsSize(size)
 
 		close(packets)
 	}()
 
 	return packets
+}
+
+func skipPacket(packet *sletat.PacketInfo) bool {
+	if !isDepartCityActive(packet.DptCityId) {
+		return true
+	}
+
+	return false
 }
