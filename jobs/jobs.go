@@ -5,6 +5,7 @@ import (
 
 	"github.com/fellah/go-helpers/log"
 	"github.com/fellah/tcache/db"
+	"github.com/fellah/tcache/stat"
 )
 
 var (
@@ -12,13 +13,15 @@ var (
 )
 
 func Start() {
+	stat := stat.NewTours()
+
 	for {
-		Pipe()
+		Pipe(stat)
 		<-ticker.C
 	}
 }
 
-func Pipe() {
+func Pipe(stat *stat.Tours) {
 	queryOperators()
 	queryCities()
 
@@ -28,14 +31,11 @@ func Pipe() {
 		return
 	}
 
-	//db.RemoveExpiredTours()
-	//db.RemoveExistTours(t)
-
 	packets := fetchPackets(t)
 
-	tours := fetchTours(packets)
+	tours := fetchTours(packets, stat)
 
-	end := saveTours(tours)
+	end := saveTours(tours, stat)
 
 	finalize(end)
 }
@@ -54,6 +54,7 @@ func makeDownloadTime() (string, error) {
 	t := time.Now().In(location).Add(-2 * time.Hour)
 	t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 
+	// Development mode.
 	//t := time.Now().In(location).Add(-5 * time.Minute)
 
 	return t.Format(time.RFC3339), nil
