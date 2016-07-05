@@ -75,5 +75,5 @@ func kidsValue(v *int) string {
 		return strconv.Itoa(*v)
 	}
 
-	return "null"
+	return "-1"
 }

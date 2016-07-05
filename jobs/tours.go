@@ -149,9 +149,10 @@ func isSkipped(tour *sletat.Tour) bool {
 	return false
 }
 
-func finalize(end <-chan bool) {
+func finalize(end <-chan bool, stat *stat.Tours) {
 	go func() {
 		<-end
+		stat.Output()
 		log.Info.Println("END")
 	}()
 }

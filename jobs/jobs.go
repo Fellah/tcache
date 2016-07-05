@@ -37,7 +37,7 @@ func Pipe(stat *stat.Tours) {
 
 	end := saveTours(tours, stat)
 
-	finalize(end)
+	finalize(end, stat)
 }
 
 func End() {
