@@ -20,6 +20,10 @@ func fetchPackets(t string) chan sletat.PacketInfo {
 				continue
 			}
 
+			if !isOperatorActive(packet.SourceId) {
+				continue
+			}
+
 			packets <- packet
 		}
 

@@ -12,7 +12,7 @@ const (
 
 	toursUnique = `
 		hotel_id, checkin, dpt_city_id, nights,
-		adults, kids, source_id, meal_id,
+		adults, kids, meal_id,
 		kid1age, kid2age, kid3age
 	`
 

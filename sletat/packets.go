@@ -33,7 +33,6 @@ type PacketInfo struct {
 
 func FetchPacketsList(date string) ([]PacketInfo, error) {
 	var buf bytes.Buffer
-	//var packet PacketInfo
 
 	request.Body.SOAPAction = GetPacketList{
 		CreateDatePoint: date,
