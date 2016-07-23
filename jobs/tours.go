@@ -107,6 +107,103 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 			tour.PriceUsd = 0
 		}
 	}
+
+	processKidsValue(tour)
+
+	// Set 'kidAge' variables to the minimum values. This should decrease number of tours in database.
+	if tour.Kid1Age != nil {
+		*tour.Kid1Age = processKidAgeValue(*tour.Kid1Age)
+	}
+	if tour.Kid2Age != nil {
+		*tour.Kid2Age = processKidAgeValue(*tour.Kid2Age)
+	}
+	if tour.Kid3Age != nil {
+		*tour.Kid3Age = processKidAgeValue(*tour.Kid3Age)
+	}
+
+}
+
+func processKidsValue(tour *sletat.Tour) {
+	kids := 0
+
+	if tour.Kid1Age != nil {
+		kids++
+	}
+
+	if tour.Kid2Age != nil {
+		kids++
+	}
+
+	if tour.Kid3Age != nil {
+		kids++
+	}
+
+	if kids != tour.Kids {
+		switch tour.Kids {
+		case 0:
+			tour.Kid1Age, tour.Kid2Age, tour.Kid3Age = nil, nil, nil
+		case 1:
+			tour.Kid2Age, tour.Kid3Age = nil, nil
+		case 2:
+			tour.Kid3Age = nil
+		}
+	}
+
+	kidsSlice := make(KidsSlice, 3)
+
+	if tour.Kid1Age != nil {
+		kidsSlice[0] = *tour.Kid1Age
+	} else {
+		kidsSlice[0] = -1
+	}
+
+	if tour.Kid2Age != nil {
+		kidsSlice[1] = *tour.Kid2Age
+	} else {
+		kidsSlice[1] = -1
+	}
+
+	if tour.Kid3Age != nil {
+		kidsSlice[2] = *tour.Kid3Age
+	} else {
+		kidsSlice[2] = -1
+	}
+
+	kidsSlice.Sort()
+
+	if kidsSlice[0] > 0 {
+		*tour.Kid1Age = kidsSlice[0]
+	} else {
+		tour.Kid1Age = nil
+	}
+
+	if kidsSlice[1] > 0 {
+		*tour.Kid2Age = kidsSlice[1]
+	} else {
+		tour.Kid2Age = nil
+	}
+
+	if kidsSlice[2] > 0 {
+		*tour.Kid3Age = kidsSlice[2]
+	} else {
+		tour.Kid3Age = nil
+	}
+}
+
+func processKidAgeValue(kidAge int) (age int) {
+	if kidAge >= 0 && kidAge <= 1 {
+		// Variable 'age' equal zero by default.
+	} else if kidAge >= 2 && kidAge <= 6 {
+		age = 2
+	} else if kidAge >= 7 && kidAge <= 8 {
+		age = 7
+	} else if kidAge >= 9 && kidAge <= 12 {
+		age = 9
+	} else if kidAge >= 13 {
+		age = 13
+	}
+
+	return age
 }
 
 func saveTours(tours <-chan sletat.Tour, stat *stat.Tours) <-chan bool {
@@ -149,9 +246,10 @@ func isSkipped(tour *sletat.Tour) bool {
 	return false
 }
 
-func finalize(end <-chan bool) {
+func finalize(end <-chan bool, stat *stat.Tours) {
 	go func() {
 		<-end
+		stat.Output()
 		log.Info.Println("END")
 	}()
 }
@@ -164,7 +262,6 @@ func findDuplicate(tour sletat.Tour, toursBulk []sletat.Tour) int {
 			tour.Nights == toursBulk[i].Nights &&
 			tour.Adults == toursBulk[i].Adults &&
 			tour.Kids == toursBulk[i].Kids &&
-			tour.SourceId == toursBulk[i].SourceId &&
 			tour.MealId == toursBulk[i].MealId &&
 			compareKidsValues(tour.Kid1Age, toursBulk[i].Kid1Age) &&
 			compareKidsValues(tour.Kid2Age, toursBulk[i].Kid2Age) &&

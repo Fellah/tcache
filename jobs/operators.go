@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"log"
+	"github.com/fellah/go-helpers/log"
 
 	"github.com/fellah/tcache/db"
 )
@@ -12,12 +12,15 @@ type Operator struct {
 	ExchangeRateRur float64
 }
 
-var operators map[int]Operator
+var (
+	operators map[int]Operator
+	activeOperatorsIds []int
+)
 
 func queryOperators() {
 	rawOperators, err := db.QueryOperators()
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 
 	operators = make(map[int]Operator)
@@ -28,6 +31,11 @@ func queryOperators() {
 			ExchangeRateRur: parseExchangeRateValue(rawOperator.ExchangeRateRur),
 		}
 	}
+
+	activeOperatorsIds, err = db.QueryActiveOperators()
+	if err != nil {
+		log.Error.Fatal(err)
+	}
 }
 
 func parseExchangeRateValue(v interface{}) float64 {
@@ -37,4 +45,14 @@ func parseExchangeRateValue(v interface{}) float64 {
 	default:
 		return 0
 	}
+}
+
+func isOperatorActive(operatorId int) bool {
+	for _, activeOperatorId := range activeOperatorsIds {
+		if activeOperatorId == operatorId {
+			return true
+		}
+	}
+
+	return false
 }

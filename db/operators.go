@@ -61,3 +61,31 @@ func QueryOperators() ([]Operator, error) {
 
 	return operators, nil
 }
+
+func QueryActiveOperators() ([]int, error) {
+	rows, err := db.Query("SELECT sletat_tour_operator_id FROM sletat_tour_operators WHERE active = true")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var operatorId int
+	operatorIds := make([]int, 0)
+
+	for rows.Next() {
+		err = rows.Scan(&operatorId)
+		if err != nil {
+			log.Error.Println(err)
+		}
+
+		operatorIds = append(operatorIds, operatorId)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return operatorIds, nil
+}

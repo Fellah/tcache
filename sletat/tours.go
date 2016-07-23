@@ -72,6 +72,7 @@ func FetchTours(packetId string) (chan Tour, error) {
 				if se.Name.Local == "tour" {
 					tour := Tour{}
 					decoder.DecodeElement(&tour, &se)
+					//checkKidsIssue(&tour, url)
 					tours <- tour
 				}
 			}
@@ -80,3 +81,30 @@ func FetchTours(packetId string) (chan Tour, error) {
 
 	return tours, nil
 }
+
+/*
+func checkKidsIssue(tour *Tour, url string) {
+	kids := 0
+
+	if tour.Kid1Age != nil {
+		kids++
+	}
+
+	if tour.Kid2Age != nil {
+		kids++
+	}
+
+	if tour.Kid3Age != nil {
+		kids++
+	}
+
+	if tour.Kids != kids {
+		output, err := xml.MarshalIndent(tour, "  ", "    ")
+		if err != nil {
+			log.Debug.Fatal(err)
+		}
+
+		log.Debug.Println(url)
+		log.Debug.Println(string(output), "\n\n")
+	}
+}*/
