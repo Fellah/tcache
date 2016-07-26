@@ -109,33 +109,30 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	}
 
 	processKidsValue(tour)
-
-	// Set 'kidAge' variables to the minimum values. This should decrease number of tours in database.
-	if tour.Kid1Age != nil {
-		*tour.Kid1Age = processKidAgeValue(*tour.Kid1Age)
-	}
-	if tour.Kid2Age != nil {
-		*tour.Kid2Age = processKidAgeValue(*tour.Kid2Age)
-	}
-	if tour.Kid3Age != nil {
-		*tour.Kid3Age = processKidAgeValue(*tour.Kid3Age)
-	}
-
 }
 
 func processKidsValue(tour *sletat.Tour) {
-	kids := 0
+	var kids, kid1Age, kid2Age, kid3Age int
 
 	if tour.Kid1Age != nil {
 		kids++
+		kid1Age = processKidAgeValue(*tour.Kid1Age)
+	} else {
+		kid1Age = -1
 	}
 
 	if tour.Kid2Age != nil {
 		kids++
+		kid2Age = processKidAgeValue(*tour.Kid2Age)
+	} else {
+		kid2Age = -1
 	}
 
 	if tour.Kid3Age != nil {
 		kids++
+		kid3Age = processKidAgeValue(*tour.Kid3Age)
+	} else {
+		kid3Age = -1
 	}
 
 	if kids != tour.Kids {
@@ -151,43 +148,15 @@ func processKidsValue(tour *sletat.Tour) {
 
 	kidsSlice := make(KidsSlice, 3)
 
-	if tour.Kid1Age != nil {
-		kidsSlice[0] = *tour.Kid1Age
-	} else {
-		kidsSlice[0] = -1
-	}
-
-	if tour.Kid2Age != nil {
-		kidsSlice[1] = *tour.Kid2Age
-	} else {
-		kidsSlice[1] = -1
-	}
-
-	if tour.Kid3Age != nil {
-		kidsSlice[2] = *tour.Kid3Age
-	} else {
-		kidsSlice[2] = -1
-	}
+	kidsSlice[0] = kid1Age
+	kidsSlice[1] = kid2Age
+	kidsSlice[2] = kid3Age
 
 	kidsSlice.Sort()
 
-	if kidsSlice[0] > 0 {
-		*tour.Kid1Age = kidsSlice[0]
-	} else {
-		tour.Kid1Age = nil
-	}
-
-	if kidsSlice[1] > 0 {
-		*tour.Kid2Age = kidsSlice[1]
-	} else {
-		tour.Kid2Age = nil
-	}
-
-	if kidsSlice[2] > 0 {
-		*tour.Kid3Age = kidsSlice[2]
-	} else {
-		tour.Kid3Age = nil
-	}
+	tour.Kid1Age = &kidsSlice[0]
+	tour.Kid2Age = &kidsSlice[1]
+	tour.Kid3Age = &kidsSlice[2]
 }
 
 func processKidAgeValue(kidAge int) (age int) {
@@ -276,15 +245,15 @@ func findDuplicate(tour sletat.Tour, toursBulk []sletat.Tour) int {
 func checkKidsIssue(tour *sletat.Tour, stat *stat.Tours) {
 	kids := 0
 
-	if tour.Kid1Age != nil {
+	if *tour.Kid1Age >= 0 {
 		kids++
 	}
 
-	if tour.Kid2Age != nil {
+	if *tour.Kid2Age >= 0 {
 		kids++
 	}
 
-	if tour.Kid3Age != nil {
+	if *tour.Kid3Age >= 0 {
 		kids++
 	}
 

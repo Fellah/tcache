@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"strings"
-	"strconv"
 
 	_ "github.com/lib/pq"
 
@@ -63,17 +62,9 @@ func makeToursValues(tours []sletat.Tour) string {
 			tour.Nights, tour.Adults, tour.Kids, tour.HotelId,
 			tour.TownId, tour.MealId, tour.CreateDate,
 			tour.UpdateDate, tour.DptCityId, tour.CountryId, tour.PriceByr,
-			tour.PriceEur, tour.PriceUsd, true,  kidsValue(tour.Kid1Age),
-			kidsValue(tour.Kid2Age), kidsValue(tour.Kid3Age))
+			tour.PriceEur, tour.PriceUsd, true,  *tour.Kid1Age,
+			*tour.Kid2Age, *tour.Kid3Age)
 	}
 
 	return strings.Join(values, "), (")
-}
-
-func kidsValue(v *int) string {
-	if v != nil {
-		return strconv.Itoa(*v)
-	}
-
-	return "-1"
 }
