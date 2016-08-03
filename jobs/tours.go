@@ -45,6 +45,11 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan sletat.
 					}
 
 					processTour(packet, &tour)
+
+					if !isKidsValid(&tour) {
+						stat.KidsIssue <- 1
+					}
+
 					out <- tour
 				}
 
@@ -111,78 +116,13 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	processKidsValue(tour)
 }
 
-func processKidsValue(tour *sletat.Tour) {
-	var kids, kid1Age, kid2Age, kid3Age int
-
-	if tour.Kid1Age != nil {
-		kids++
-		kid1Age = processKidAgeValue(*tour.Kid1Age)
-	} else {
-		kid1Age = -1
-	}
-
-	if tour.Kid2Age != nil {
-		kids++
-		kid2Age = processKidAgeValue(*tour.Kid2Age)
-	} else {
-		kid2Age = -1
-	}
-
-	if tour.Kid3Age != nil {
-		kids++
-		kid3Age = processKidAgeValue(*tour.Kid3Age)
-	} else {
-		kid3Age = -1
-	}
-
-	if kids != tour.Kids {
-		switch tour.Kids {
-		case 0:
-			tour.Kid1Age, tour.Kid2Age, tour.Kid3Age = nil, nil, nil
-		case 1:
-			tour.Kid2Age, tour.Kid3Age = nil, nil
-		case 2:
-			tour.Kid3Age = nil
-		}
-	}
-
-	kidsSlice := make(KidsSlice, 3)
-
-	kidsSlice[0] = kid1Age
-	kidsSlice[1] = kid2Age
-	kidsSlice[2] = kid3Age
-
-	kidsSlice.Sort()
-
-	tour.Kid1Age = &kidsSlice[0]
-	tour.Kid2Age = &kidsSlice[1]
-	tour.Kid3Age = &kidsSlice[2]
-}
-
-func processKidAgeValue(kidAge int) (age int) {
-	if kidAge >= 0 && kidAge <= 1 {
-		// Variable 'age' equal zero by default.
-	} else if kidAge >= 2 && kidAge <= 6 {
-		age = 2
-	} else if kidAge >= 7 && kidAge <= 8 {
-		age = 7
-	} else if kidAge >= 9 && kidAge <= 12 {
-		age = 9
-	} else if kidAge >= 13 {
-		age = 13
-	}
-
-	return age
-}
-
 func saveTours(tours <-chan sletat.Tour, stat *stat.Tours) <-chan bool {
 	end := make(chan bool)
 
 	go func() {
 		toursBulk := make([]sletat.Tour, 0, bulkSize)
 		for tour := range tours {
-			checkKidsIssue(&tour, stat)
-
+			// TODO: Comment
 			i := findDuplicate(tour, toursBulk)
 			if i >= 0 && i < len(toursBulk) {
 				if tour.Price < toursBulk[i].Price {
@@ -240,26 +180,6 @@ func findDuplicate(tour sletat.Tour, toursBulk []sletat.Tour) int {
 	}
 
 	return -1
-}
-
-func checkKidsIssue(tour *sletat.Tour, stat *stat.Tours) {
-	kids := 0
-
-	if *tour.Kid1Age >= 0 {
-		kids++
-	}
-
-	if *tour.Kid2Age >= 0 {
-		kids++
-	}
-
-	if *tour.Kid3Age >= 0 {
-		kids++
-	}
-
-	if tour.Kids != kids {
-		stat.KidsIssue <- 1
-	}
 }
 
 func compareKidsValues(vA *int, vB *int) bool {
