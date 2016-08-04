@@ -33,9 +33,7 @@ func Pipe(stat *stat.Tours) {
 
 	packets := fetchPackets(t)
 
-	tours := fetchTours(packets, stat)
-
-	end := saveTours(tours, stat)
+	end := fetchTours(packets, stat)
 
 	finalize(end, stat)
 }

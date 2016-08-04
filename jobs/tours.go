@@ -14,8 +14,8 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan sletat.Tour {
-	out := make(chan sletat.Tour)
+func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
+	end := make(chan bool)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
@@ -28,12 +28,17 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan sletat.
 				var count uint64 = 0
 				var skipped uint64 = 0
 
+				// TODO: Retry construction.
 				tours, err := tryGetToursChannel(packet.Id)
 				if err != nil {
 					log.Error.Println(err)
 					continue
 				}
 
+				collect := make(chan sletat.Tour)
+				go collectTours(collect, stat)
+
+				// Process tours before send the to the database.
 				for tour := range tours {
 					count++
 
@@ -50,8 +55,10 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan sletat.
 						stat.KidsIssue <- 1
 					}
 
-					out <- tour
+					collect <- tour
 				}
+
+				close(collect)
 
 				stat.Total <- count
 				stat.Skipped <- skipped
@@ -63,10 +70,12 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan sletat.
 
 	go func() {
 		wg.Wait()
-		close(out)
+
+		end <- true
+		close(end)
 	}()
 
-	return out
+	return end
 }
 
 func tryGetToursChannel(packetId string) (chan sletat.Tour, error) {
@@ -95,17 +104,17 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	tour.CountryId = packet.CountryId
 
 	if operator, ok := operators[tour.SourceId]; ok {
-		// BYR = RUB * exchange rate
+		// BYN = RUB * exchange rate
 		tour.PriceByr = int(float64(tour.Price) * operator.ExchangeRateRur)
 
-		// EUR = BYR * exchange rate
+		// EUR = BYN / exchange rate
 		if tour.PriceEur > 0 && operator.ExchangeRateEur > 0 {
 			tour.PriceEur = int(float64(tour.PriceByr) / operator.ExchangeRateEur)
 		} else {
 			tour.PriceEur = 0
 		}
 
-		// USD = BYR * exchange rate
+		// USD = BYN / exchange rate
 		if tour.PriceByr > 0 && operator.ExchangeRateUsd > 0 {
 			tour.PriceUsd = int(float64(tour.PriceByr) / operator.ExchangeRateUsd)
 		} else {
@@ -116,21 +125,11 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	processKidsValue(tour)
 }
 
-func saveTours(tours <-chan sletat.Tour, stat *stat.Tours) <-chan bool {
-	end := make(chan bool)
-
+func collectTours(tours <-chan sletat.Tour, stat *stat.Tours) {
 	go func() {
 		toursBulk := make([]sletat.Tour, 0, bulkSize)
 		for tour := range tours {
-			// TODO: Comment
-			i := findDuplicate(tour, toursBulk)
-			if i >= 0 && i < len(toursBulk) {
-				if tour.Price < toursBulk[i].Price {
-					toursBulk[i] = tour
-				}
-			} else {
-				toursBulk = append(toursBulk, tour)
-			}
+			toursBulk = append(toursBulk, tour)
 
 			if len(toursBulk) == bulkSize {
 				db.SaveTours(toursBulk)
@@ -139,12 +138,7 @@ func saveTours(tours <-chan sletat.Tour, stat *stat.Tours) <-chan bool {
 			}
 		}
 		db.SaveTours(toursBulk)
-
-		end <- true
-		close(end)
 	}()
-
-	return end
 }
 
 func isSkipped(tour *sletat.Tour) bool {
@@ -161,35 +155,4 @@ func finalize(end <-chan bool, stat *stat.Tours) {
 		stat.Output()
 		log.Info.Println("END")
 	}()
-}
-
-func findDuplicate(tour sletat.Tour, toursBulk []sletat.Tour) int {
-	for i := range toursBulk {
-		if tour.HotelId == toursBulk[i].HotelId &&
-			tour.Checkin == toursBulk[i].Checkin &&
-			tour.DptCityId == toursBulk[i].DptCityId &&
-			tour.Nights == toursBulk[i].Nights &&
-			tour.Adults == toursBulk[i].Adults &&
-			tour.Kids == toursBulk[i].Kids &&
-			tour.MealId == toursBulk[i].MealId &&
-			compareKidsValues(tour.Kid1Age, toursBulk[i].Kid1Age) &&
-			compareKidsValues(tour.Kid2Age, toursBulk[i].Kid2Age) &&
-			compareKidsValues(tour.Kid3Age, toursBulk[i].Kid3Age) {
-			return i
-		}
-	}
-
-	return -1
-}
-
-func compareKidsValues(vA *int, vB *int) bool {
-	if vA == nil && vB != nil {
-		return false
-	} else if vA != nil && vB == nil {
-		return false
-	} else if vA == nil && vB == nil {
-		return true
-	} else {
-		return *vA == *vB
-	}
 }
