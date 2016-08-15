@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	workersNum = 32
+	workersNum = 16
 	bulkSize   = 516
 )
 
@@ -28,8 +28,7 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
 				var count uint64 = 0
 				var skipped uint64 = 0
 
-				// TODO: Retry construction.
-				tours, err := tryGetToursChannel(packet.Id)
+				tours, err := sletat.FetchTours(packet.Id)
 				if err != nil {
 					log.Error.Println(err)
 					continue
@@ -76,22 +75,6 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
 	}()
 
 	return end
-}
-
-func tryGetToursChannel(packetId string) (chan sletat.Tour, error) {
-	var err error
-
-	for i := 0; i < 3; i++ {
-		tours, err := sletat.FetchTours(packetId)
-		if err != nil {
-			log.Info.Println(packetId, i, err)
-			continue
-		}
-
-		return tours, nil
-	}
-
-	return nil, err
 }
 
 func preProcessTour(packet sletat.PacketInfo, tour *sletat.Tour) {

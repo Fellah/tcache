@@ -1,13 +1,14 @@
 package sletat
 
 import (
+	"io"
 	"compress/gzip"
 	"encoding/xml"
 
 	"github.com/fellah/tcache/log"
 )
 
-const bulKCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
+const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
 type Tour struct {
 	SourceId   int    `xml:"sourceId,attr"`
@@ -37,7 +38,7 @@ type Tour struct {
 }
 
 func FetchTours(packetId string) (chan Tour, error) {
-	url := bulKCacheUrl + packetId
+	url := bulkCacheUrl + packetId
 	log.Info.Println("Download:", url)
 
 	resp, err := client.Get(url)
@@ -59,11 +60,12 @@ func FetchTours(packetId string) (chan Tour, error) {
 		decoder := xml.NewDecoder(gzipReader)
 		for {
 			t, err := decoder.Token()
-			if err != nil && err.Error() != "EOF" {
+			if err != nil && err != io.EOF {
 				log.Error.Println(err)
+				break
 			}
 
-			if t == nil {
+			if err == io.EOF {
 				break
 			}
 
