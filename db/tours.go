@@ -28,7 +28,7 @@ func SaveTours(tours []sletat.Tour) {
 		`, toursFields, values, toursUnique, toursUpdate)
 
 		if err := sendQuery(query); err != nil {
-			log.Error.Println(err, query)
+			log.Error.Println(err)
 		}
 	}
 
@@ -44,7 +44,7 @@ func SaveTours(tours []sletat.Tour) {
 		`, partition, toursFields, values, toursUnique, toursUpdate)
 
 		if err := sendQuery(query); err != nil {
-			log.Error.Println(err, query)
+			log.Error.Println(err)
 		}
 	}
 
@@ -61,7 +61,7 @@ func SaveTours(tours []sletat.Tour) {
 		`, toursFieldsEHI, values, toursUniqueEHI, toursUpdate)
 
 		if err := sendQuery(query); err != nil {
-			log.Error.Println(err, query)
+			log.Error.Println("db:", err)
 		}
 	}
 }
