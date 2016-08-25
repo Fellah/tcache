@@ -35,13 +35,13 @@ func SaveTours(tours []sletat.Tour) {
 	{
 		partition := "p" + strconv.Itoa(tours[0].CountryId)
 
-		values := makeToursValues(filteredTours)
+		values := makeToursValuesPartition(filteredTours)
 		query := fmt.Sprintf(`
 		INSERT INTO partitioned_cached_sletat_tours_partitions.%s as cst (%s)
 		VALUES (%s)
 		ON CONFLICT (%s)
 		DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
-		`, partition, toursFields, values, toursUnique)
+		`, partition, toursFieldsPartition, values, toursUnique)
 
 		if err := sendQuery(query); err != nil {
 			log.Error.Println(err)
@@ -103,6 +103,21 @@ func makeToursValues(tours []sletat.Tour) string {
 			tour.UpdateDate, tour.DptCityId, tour.CountryId, tour.PriceByr,
 			tour.PriceEur, tour.PriceUsd, true, *tour.Kid1Age,
 			*tour.Kid2Age, *tour.Kid3Age)
+	}
+
+	return strings.Join(values, "), (")
+}
+
+func makeToursValuesPartition(tours []sletat.Tour) string {
+	values := make([]string, len(tours))
+	for i, tour := range tours {
+		values[i] = fmt.Sprintf(toursValuesPartition,
+			tour.SourceId, tour.Price, tour.CurrencyId, tour.Checkin,
+			tour.Nights, tour.Adults, tour.Kids, tour.HotelId,
+			tour.TownId, tour.MealId, tour.CreateDate,
+			tour.UpdateDate, tour.DptCityId, tour.CountryId, tour.PriceByr,
+			tour.PriceEur, tour.PriceUsd, true, *tour.Kid1Age,
+			*tour.Kid2Age, *tour.Kid3Age, " now()")
 	}
 
 	return strings.Join(values, "), (")

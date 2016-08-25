@@ -10,6 +10,8 @@ const (
 		kid2age, kid3age
 	`
 
+	toursFieldsPartition = toursFields + `, updated_price`
+
 	toursFieldsEHI = `
 		source_id, price, currency_id, checkin,
 		nights, adults, kids,
@@ -39,6 +41,8 @@ const (
 		%d, %t, %d, %d,
 		%d
 	`
+
+	toursValuesPartition = toursValues + `, %s`
 
 	toursValuesEHI = `
 		%d, %d, %d, '%s',
