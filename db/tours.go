@@ -40,8 +40,8 @@ func SaveTours(tours []sletat.Tour) {
 		INSERT INTO partitioned_cached_sletat_tours_partitions.%s as cst (%s)
 		VALUES (%s)
 		ON CONFLICT (%s)
-		DO UPDATE SET %s
-		`, partition, toursFields, values, toursUnique, toursUpdate)
+		DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
+		`, partition, toursFields, values, toursUnique)
 
 		if err := sendQuery(query); err != nil {
 			log.Error.Println(err)
