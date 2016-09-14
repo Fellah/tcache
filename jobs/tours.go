@@ -9,6 +9,12 @@ import (
 	"github.com/fellah/tcache/stat"
 )
 
+func init() {
+	mx = sync.Mutex{}
+}
+
+var mx sync.Mutex
+
 const (
 	workersNum = 16
 	bulkSize   = 516
@@ -115,12 +121,16 @@ func collectTours(tours <-chan sletat.Tour, stat *stat.Tours) {
 			toursBulk = append(toursBulk, tour)
 
 			if len(toursBulk) == bulkSize {
+				mx.Lock()
 				db.SaveTours(toursBulk)
+				mx.Unlock()
 
 				toursBulk = make([]sletat.Tour, 0, bulkSize)
 			}
 		}
+		mx.Lock()
 		db.SaveTours(toursBulk)
+		mx.Unlock()
 	}()
 }
 

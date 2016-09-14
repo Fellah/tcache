@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
+	"time"
+	"sync"
 
 	_ "github.com/lib/pq"
 
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 )
+
+func init() {
+	mx = sync.Mutex{}
+}
+
+var mx sync.Mutex
 
 func SaveTours(tours []sletat.Tour) {
 	if len(tours) == 0 {
@@ -27,9 +35,14 @@ func SaveTours(tours []sletat.Tour) {
 		DO UPDATE SET %s
 		`, toursFields, values, toursUnique, toursUpdate)
 
+		mx.Lock()
+		start := time.Now()
+		println("SaveTours A START")
 		if err := sendQuery(query); err != nil {
 			log.Error.Println(err)
 		}
+		println("SaveTours A END ", time.Since(start).String())
+		mx.Unlock()
 	}
 
 	{
@@ -43,9 +56,14 @@ func SaveTours(tours []sletat.Tour) {
 		DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
 		`, partition, toursFieldsPartition, values, toursUnique)
 
+		mx.Lock()
+		start := time.Now()
+		println("SaveTours B START")
 		if err := sendQuery(query); err != nil {
 			log.Error.Println(err)
 		}
+		println("SaveTours B END ", time.Since(start).String())
+		mx.Unlock()
 	}
 
 	// TODO: Comment.
@@ -60,9 +78,14 @@ func SaveTours(tours []sletat.Tour) {
 		DO UPDATE SET %s
 		`, toursFieldsEHI, values, toursUniqueEHI, toursUpdate)
 
+		mx.Lock()
+		start := time.Now()
+		println("SaveTours C START")
 		if err := sendQuery(query); err != nil {
 			log.Error.Println("db:", err)
 		}
+		println("SaveTours C END ", time.Since(start).String())
+		mx.Unlock()
 	}
 }
 
