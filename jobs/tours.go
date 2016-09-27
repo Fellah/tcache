@@ -15,7 +15,7 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
+func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
 	end := make(chan bool)
 
 	wg := new(sync.WaitGroup)
@@ -78,11 +78,11 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
 	return end
 }
 
-func preProcessTour(packet sletat.PacketInfo, tour *data.Tour) {
+func preProcessTour(packet data.PacketInfo, tour *data.Tour) {
 	tour.DptCityId = packet.DptCityId
 }
 
-func processTour(packet sletat.PacketInfo, tour *data.Tour) {
+func processTour(packet data.PacketInfo, tour *data.Tour) {
 	tour.CreateDate = packet.CreateDate
 
 	tour.CountryId = packet.CountryId

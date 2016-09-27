@@ -3,10 +3,11 @@ package jobs
 import (
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/data"
 )
 
-func fetchPackets(t string) chan sletat.PacketInfo {
-	packets := make(chan sletat.PacketInfo)
+func fetchPackets(t string) chan data.PacketInfo {
+	packets := make(chan data.PacketInfo)
 
 	go func() {
 		log.Info.Println("Download packets from", t)
@@ -33,7 +34,7 @@ func fetchPackets(t string) chan sletat.PacketInfo {
 	return packets
 }
 
-func skipPacket(packet *sletat.PacketInfo) bool {
+func skipPacket(packet *data.PacketInfo) bool {
 	if !isDepartCityActive(packet.DptCityId) {
 		return true
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"net/http"
+	"github.com/fellah/tcache/data"
 )
 
 var request = Request{
@@ -15,26 +16,10 @@ var request = Request{
 	},
 }
 
-// SOAPAction
-type GetPacketList struct {
-	XMLName         xml.Name `xml:"urn:SletatRu:Contracts:Bulk:Soap11Gate:v1 GetPacketList"`
-	CreateDatePoint string   `xml:"createDatePoint"`
-}
-
-type PacketInfo struct {
-	CountryId    int    `xml:"CountryId"`
-	CreateDate   string `xml:"CreateDate"`
-	DateTimeFrom string `xml:"DateTimeFrom"`
-	DateTimeTo   string `xml:"DateTimeTo"`
-	DptCityId    int    `xml:"DptCityId"`
-	Id           string `xml:"Id"`
-	SourceId     int    `xml:"SourceId"`
-}
-
-func FetchPacketsList(date string) ([]PacketInfo, error) {
+func FetchPacketsList(date string) ([]data.PacketInfo, error) {
 	var buf bytes.Buffer
 
-	request.Body.SOAPAction = GetPacketList{
+	request.Body.SOAPAction = data.GetPacketList{
 		CreateDatePoint: date,
 	}
 
@@ -65,7 +50,7 @@ func FetchPacketsList(date string) ([]PacketInfo, error) {
 				XMLName             xml.Name `xml:"GetPacketListResponse"`
 				GetPacketListResult struct {
 					XMLName    xml.Name `xml:"GetPacketListResult"`
-					PacketInfo []PacketInfo
+					PacketInfo []data.PacketInfo
 				}
 			}
 		}
