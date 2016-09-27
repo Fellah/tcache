@@ -17,7 +17,7 @@ func PrepareData() {
 	}
 }
 
-func TourEnable(tour *data.Tour) bool {
+func ForHotel(tour *data.Tour) bool {
 	return isHotelGood(tour.HotelId)
 }
 

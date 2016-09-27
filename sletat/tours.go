@@ -50,7 +50,7 @@ func FetchTours(packetId string) (chan data.Tour, error) {
 					tour := data.Tour{}
 					decoder.DecodeElement(&tour, &se)
 
-					if prefilter.TourEnable(&tour) {
+					if prefilter.ForHotel(&tour) {
 						tours <- tour
 					}
 				}
