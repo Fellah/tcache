@@ -6,39 +6,13 @@ import (
 	"encoding/xml"
 
 	"github.com/fellah/tcache/log"
-	"github.com/fellah/tcache/jobs"
+	"github.com/fellah/tcache/data"
+	"github.com/fellah/tcache/prefilter"
 )
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
-type Tour struct {
-	SourceId   int    `xml:"sourceId,attr"`
-	UpdateDate string `xml:"updateDate,attr"`
-	Price      int    `xml:"price,attr"`
-	CurrencyId int    `xml:"currencyId,attr"`
-	Checkin    string `xml:"checkin,attr"`
-	Nights     int    `xml:"nights,attr"`
-	Adults     int    `xml:"adults,attr"`
-	Kids       int    `xml:"kids,attr"`
-	Kid1Age    *int   `xml:"kid1age,attr"`
-	Kid2Age    *int   `xml:"kid2age,attr"`
-	Kid3Age    *int   `xml:"kid3age,attr"`
-	HotelId    int    `xml:"hotelId,attr"`
-	TownId     int    `xml:"townId,attr"`
-	MealId     int    `xml:"mealId,attr"`
-	Hash       string `xml:"hash,attr"`
-
-	CreateDate string
-
-	DptCityId int
-	CountryId int
-
-	PriceByr int
-	PriceEur int
-	PriceUsd int
-}
-
-func FetchTours(packetId string) (chan Tour, error) {
+func FetchTours(packetId string) (chan data.Tour, error) {
 	url := bulkCacheUrl + packetId
 	log.Info.Println("Download:", url)
 
@@ -52,7 +26,7 @@ func FetchTours(packetId string) (chan Tour, error) {
 		return nil, err
 	}
 
-	tours := make(chan Tour)
+	tours := make(chan data.Tour)
 	go func() {
 		defer resp.Body.Close()
 		defer gzipReader.Close()
@@ -73,22 +47,16 @@ func FetchTours(packetId string) (chan Tour, error) {
 			switch se := t.(type) {
 			case xml.StartElement:
 				if se.Name.Local == "tour" {
-					tour := Tour{}
+					tour := data.Tour{}
 					decoder.DecodeElement(&tour, &se)
 
-					if skipTour(&tour) {
-						continue
+					if prefilter.TourEnable(&tour) {
+						tours <- tour
 					}
-
-					tours <- tour
 				}
 			}
 		}
 	}()
 
 	return tours, nil
-}
-
-func skipTour(tour *Tour) bool {
-	!jobs.IsHotelGood(tour.HotelId)
 }
