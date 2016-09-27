@@ -3,12 +3,12 @@ package db
 import (
 	"fmt"
 	"strings"
-	"strconv"
+	//"strconv"
 
 	_ "github.com/lib/pq"
 
-	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/data"
+	"github.com/fellah/tcache/log"
 )
 
 func SaveTours(tours []data.Tour) {
@@ -32,7 +32,7 @@ func SaveTours(tours []data.Tour) {
 		}
 	}
 
-	{
+	/*{
 		partition := "p" + strconv.Itoa(tours[0].CountryId)
 
 		values := makeToursValuesPartition(filteredTours)
@@ -46,7 +46,7 @@ func SaveTours(tours []data.Tour) {
 		if err := sendQuery(query); err != nil {
 			log.Error.Println(err)
 		}
-	}
+	}*/
 
 	// TODO: Comment.
 	{

@@ -30,4 +30,3 @@ func isHotelGood(hotelId int) bool {
 
 	return false
 }
-

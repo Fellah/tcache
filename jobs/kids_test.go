@@ -7,8 +7,8 @@ import (
 )
 
 func TestProcessKidAgeValue(t *testing.T) {
-	tValues := []struct{
-		input int
+	tValues := []struct {
+		input    int
 		expected int
 	}{
 		{0, 0}, {1, 0},
@@ -23,4 +23,3 @@ func TestProcessKidAgeValue(t *testing.T) {
 		assert.Equal(t, tValue.expected, result)
 	}
 }
-

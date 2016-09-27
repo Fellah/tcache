@@ -1,9 +1,9 @@
 package jobs
 
 import (
+	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
-	"github.com/fellah/tcache/data"
 )
 
 func fetchPackets(t string) chan data.PacketInfo {

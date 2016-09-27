@@ -1,12 +1,12 @@
 package sletat
 
 import (
-	"io"
 	"compress/gzip"
 	"encoding/xml"
+	"io"
 
-	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/data"
+	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/prefilter"
 )
 

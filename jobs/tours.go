@@ -2,13 +2,20 @@ package jobs
 
 import (
 	"sync"
+	"time"
 
+	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 	"github.com/fellah/tcache/stat"
-	"github.com/fellah/tcache/data"
 )
+
+func init() {
+	mx = sync.Mutex{}
+}
+
+var mx sync.Mutex
 
 const (
 	workersNum = 16
@@ -115,12 +122,22 @@ func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
 		toursBulk = append(toursBulk, tour)
 
 		if len(toursBulk) == bulkSize {
+			mx.Lock()
+			start := time.Now()
+			println("SaveTours START")
 			db.SaveTours(toursBulk)
+			println("SaveTours END ", time.Since(start).String())
+			mx.Unlock()
 
 			toursBulk = make([]data.Tour, 0, bulkSize)
 		}
 	}
+	mx.Lock()
+	start := time.Now()
+	println("SaveTours START")
 	db.SaveTours(toursBulk)
+	println("SaveTours END ", time.Since(start).String())
+	mx.Unlock()
 }
 
 func isSkipped(tour *data.Tour) bool {

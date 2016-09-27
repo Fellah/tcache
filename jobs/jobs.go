@@ -5,8 +5,8 @@ import (
 
 	"github.com/fellah/go-helpers/log"
 	"github.com/fellah/tcache/db"
-	"github.com/fellah/tcache/stat"
 	"github.com/fellah/tcache/prefilter"
+	"github.com/fellah/tcache/stat"
 )
 
 var (

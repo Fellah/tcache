@@ -3,12 +3,12 @@ package jobs
 import (
 	"github.com/fellah/go-helpers/log"
 
-	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/data"
+	"github.com/fellah/tcache/db"
 )
 
 var (
-	operators map[int]data.Operator
+	operators          map[int]data.Operator
 	activeOperatorsIds []int
 )
 

@@ -1,8 +1,8 @@
 package jobs
 
 import (
-	"sort"
 	"github.com/fellah/tcache/data"
+	"sort"
 )
 
 type KidsSlice []int

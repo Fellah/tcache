@@ -3,8 +3,8 @@ package sletat
 import (
 	"bytes"
 	"encoding/xml"
-	"net/http"
 	"github.com/fellah/tcache/data"
+	"net/http"
 )
 
 var request = Request{
