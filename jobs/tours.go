@@ -7,6 +7,7 @@ import (
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/data"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
+func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
 	end := make(chan bool)
 
 	wg := new(sync.WaitGroup)
@@ -34,7 +35,7 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
 					continue
 				}
 
-				collect := make(chan sletat.Tour)
+				collect := make(chan data.Tour)
 				go collectTours(collect, stat)
 
 				// Process tours before send the to the database.
@@ -77,11 +78,11 @@ func fetchTours(packets <-chan sletat.PacketInfo, stat *stat.Tours) chan bool {
 	return end
 }
 
-func preProcessTour(packet sletat.PacketInfo, tour *sletat.Tour) {
+func preProcessTour(packet data.PacketInfo, tour *data.Tour) {
 	tour.DptCityId = packet.DptCityId
 }
 
-func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
+func processTour(packet data.PacketInfo, tour *data.Tour) {
 	tour.CreateDate = packet.CreateDate
 
 	tour.CountryId = packet.CountryId
@@ -108,23 +109,21 @@ func processTour(packet sletat.PacketInfo, tour *sletat.Tour) {
 	processKidsValue(tour)
 }
 
-func collectTours(tours <-chan sletat.Tour, stat *stat.Tours) {
-	go func() {
-		toursBulk := make([]sletat.Tour, 0, bulkSize)
-		for tour := range tours {
-			toursBulk = append(toursBulk, tour)
+func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
+	toursBulk := make([]data.Tour, 0, bulkSize)
+	for tour := range tours {
+		toursBulk = append(toursBulk, tour)
 
-			if len(toursBulk) == bulkSize {
-				db.SaveTours(toursBulk)
+		if len(toursBulk) == bulkSize {
+			db.SaveTours(toursBulk)
 
-				toursBulk = make([]sletat.Tour, 0, bulkSize)
-			}
+			toursBulk = make([]data.Tour, 0, bulkSize)
 		}
-		db.SaveTours(toursBulk)
-	}()
+	}
+	db.SaveTours(toursBulk)
 }
 
-func isSkipped(tour *sletat.Tour) bool {
+func isSkipped(tour *data.Tour) bool {
 	if !isCityActive(tour.TownId) {
 		return true
 	}

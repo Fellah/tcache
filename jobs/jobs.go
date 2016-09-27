@@ -6,6 +6,7 @@ import (
 	"github.com/fellah/go-helpers/log"
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/prefilter"
 )
 
 var (
@@ -24,6 +25,7 @@ func Start() {
 func Pipe(stat *stat.Tours) {
 	queryOperators()
 	queryCities()
+	prefilter.PrepareData()
 
 	t, err := makeDownloadTime()
 	if err != nil {

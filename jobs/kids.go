@@ -2,7 +2,7 @@ package jobs
 
 import (
 	"sort"
-	"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/data"
 )
 
 type KidsSlice []int
@@ -24,7 +24,7 @@ func (p KidsSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 // Sort is a convenience method.
 func (p KidsSlice) Sort() { sort.Sort(p) }
 
-func processKidsValue(tour *sletat.Tour) {
+func processKidsValue(tour *data.Tour) {
 	var kids int
 
 	if tour.Kid1Age != nil {
@@ -88,7 +88,7 @@ func processKidAgeValue(kidAge int) (age int) {
 	return age
 }
 
-func isKidsValid(tour *sletat.Tour) bool {
+func isKidsValid(tour *data.Tour) bool {
 	kids := 0
 
 	if tour.Kid1Age != nil && *tour.Kid1Age >= 0 {

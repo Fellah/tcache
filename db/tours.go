@@ -8,10 +8,10 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/fellah/tcache/log"
-	"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/data"
 )
 
-func SaveTours(tours []sletat.Tour) {
+func SaveTours(tours []data.Tour) {
 	if len(tours) == 0 {
 		return
 	}
@@ -93,7 +93,7 @@ func sendQuery(query string) error {
 	return nil
 }
 
-func makeToursValues(tours []sletat.Tour) string {
+func makeToursValues(tours []data.Tour) string {
 	values := make([]string, len(tours))
 	for i, tour := range tours {
 		values[i] = fmt.Sprintf(toursValues,
@@ -108,7 +108,7 @@ func makeToursValues(tours []sletat.Tour) string {
 	return strings.Join(values, "), (")
 }
 
-func makeToursValuesPartition(tours []sletat.Tour) string {
+func makeToursValuesPartition(tours []data.Tour) string {
 	values := make([]string, len(tours))
 	for i, tour := range tours {
 		values[i] = fmt.Sprintf(toursValuesPartition,
@@ -123,7 +123,7 @@ func makeToursValuesPartition(tours []sletat.Tour) string {
 	return strings.Join(values, "), (")
 }
 
-func makeToursValuesEHI(tours []sletat.Tour) string {
+func makeToursValuesEHI(tours []data.Tour) string {
 	values := make([]string, len(tours))
 	for i, tour := range tours {
 		values[i] = fmt.Sprintf(toursValuesEHI,
@@ -138,7 +138,7 @@ func makeToursValuesEHI(tours []sletat.Tour) string {
 	return strings.Join(values, "), (")
 }
 
-func removeDuplicates(tours []sletat.Tour, isEqual func(sletat.Tour, sletat.Tour) bool) []sletat.Tour {
+func removeDuplicates(tours []data.Tour, isEqual func(data.Tour, data.Tour) bool) []data.Tour {
 	remove := make([]bool, len(tours))
 
 	for i, _ := range tours {
@@ -150,7 +150,7 @@ func removeDuplicates(tours []sletat.Tour, isEqual func(sletat.Tour, sletat.Tour
 		}
 	}
 
-	filteredTours := make([]sletat.Tour, 0)
+	filteredTours := make([]data.Tour, 0)
 	for i, v := range tours {
 		if !remove[i] {
 			filteredTours = append(filteredTours, v)
@@ -160,7 +160,7 @@ func removeDuplicates(tours []sletat.Tour, isEqual func(sletat.Tour, sletat.Tour
 	return filteredTours
 }
 
-func isEqual(aTour, bTour sletat.Tour) bool {
+func isEqual(aTour, bTour data.Tour) bool {
 	return aTour.HotelId == bTour.HotelId &&
 		aTour.Checkin == bTour.Checkin &&
 		aTour.DptCityId == bTour.DptCityId &&
@@ -173,7 +173,7 @@ func isEqual(aTour, bTour sletat.Tour) bool {
 		*aTour.Kid3Age == *bTour.Kid3Age
 }
 
-func isEqualEHI(aTour, bTour sletat.Tour) bool {
+func isEqualEHI(aTour, bTour data.Tour) bool {
 	return aTour.CountryId == bTour.CountryId &&
 		aTour.TownId == bTour.TownId &&
 		aTour.Checkin == bTour.Checkin &&
