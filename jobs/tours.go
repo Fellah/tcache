@@ -110,19 +110,17 @@ func processTour(packet data.PacketInfo, tour *data.Tour) {
 }
 
 func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
-	go func() {
-		toursBulk := make([]data.Tour, 0, bulkSize)
-		for tour := range tours {
-			toursBulk = append(toursBulk, tour)
+	toursBulk := make([]data.Tour, 0, bulkSize)
+	for tour := range tours {
+		toursBulk = append(toursBulk, tour)
 
-			if len(toursBulk) == bulkSize {
-				db.SaveTours(toursBulk)
+		if len(toursBulk) == bulkSize {
+			db.SaveTours(toursBulk)
 
-				toursBulk = make([]data.Tour, 0, bulkSize)
-			}
+			toursBulk = make([]data.Tour, 0, bulkSize)
 		}
-		db.SaveTours(toursBulk)
-	}()
+	}
+	db.SaveTours(toursBulk)
 }
 
 func isSkipped(tour *data.Tour) bool {
