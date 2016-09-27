@@ -24,6 +24,7 @@ func Start() {
 func Pipe(stat *stat.Tours) {
 	queryOperators()
 	queryCities()
+	queryHotels()
 
 	t, err := makeDownloadTime()
 	if err != nil {

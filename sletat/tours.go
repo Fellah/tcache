@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 
 	"github.com/fellah/tcache/log"
+	"github.com/fellah/tcache/jobs"
 )
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
@@ -74,6 +75,11 @@ func FetchTours(packetId string) (chan Tour, error) {
 				if se.Name.Local == "tour" {
 					tour := Tour{}
 					decoder.DecodeElement(&tour, &se)
+
+					if skipTour(&tour) {
+						continue
+					}
+
 					tours <- tour
 				}
 			}
@@ -81,4 +87,8 @@ func FetchTours(packetId string) (chan Tour, error) {
 	}()
 
 	return tours, nil
+}
+
+func skipTour(tour *Tour) bool {
+	!jobs.IsHotelGood(tour.HotelId)
 }
