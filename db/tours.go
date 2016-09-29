@@ -32,38 +32,40 @@ func SaveTours(tours []data.Tour) {
 		}
 	}
 
-	/*{
-		partition := "p" + strconv.Itoa(tours[0].CountryId)
+	/*
+		{
+			partition := "p" + strconv.Itoa(tours[0].CountryId)
 
-		values := makeToursValuesPartition(filteredTours)
-		query := fmt.Sprintf(`
-		INSERT INTO partitioned_cached_sletat_tours_partitions.%s as cst (%s)
-		VALUES (%s)
-		ON CONFLICT (%s)
-		DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
-		`, partition, toursFieldsPartition, values, toursUnique)
+			values := makeToursValuesPartition(filteredTours)
+			query := fmt.Sprintf(`
+			INSERT INTO partitioned_cached_sletat_tours_partitions.%s as cst (%s)
+			VALUES (%s)
+			ON CONFLICT (%s)
+			DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
+			`, partition, toursFieldsPartition, values, toursUnique)
 
-		if err := sendQuery(query); err != nil {
-			log.Error.Println(err)
+			if err := sendQuery(query); err != nil {
+				log.Error.Println(err)
+			}
+		}*/
+
+	/*
+		{
+			filteredTours := removeDuplicates(tours, isEqualEHI)
+
+			values := makeToursValuesEHI(filteredTours)
+			query := fmt.Sprintf(`
+			INSERT INTO cached_sletat_tour_by_cities as cst (%s)
+			VALUES (%s)
+			ON CONFLICT (%s)
+			DO UPDATE SET %s
+			`, toursFieldsEHI, values, toursUniqueEHI, toursUpdate)
+
+			if err := sendQuery(query); err != nil {
+				log.Error.Println("db:", err)
+			}
 		}
-	}*/
-
-	// TODO: Comment.
-	{
-		filteredTours := removeDuplicates(tours, isEqualEHI)
-
-		values := makeToursValuesEHI(filteredTours)
-		query := fmt.Sprintf(`
-		INSERT INTO cached_sletat_tour_by_cities as cst (%s)
-		VALUES (%s)
-		ON CONFLICT (%s)
-		DO UPDATE SET %s
-		`, toursFieldsEHI, values, toursUniqueEHI, toursUpdate)
-
-		if err := sendQuery(query); err != nil {
-			log.Error.Println("db:", err)
-		}
-	}
+	*/
 }
 
 func sendQuery(query string) error {
