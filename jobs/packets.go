@@ -6,9 +6,7 @@ import (
 	"github.com/fellah/tcache/sletat"
 )
 
-func fetchPackets(t string) chan data.PacketInfo {
-	packets := make(chan data.PacketInfo)
-
+func fetchPackets(channels []chan data.PacketInfo, t string) {
 	go func() {
 		log.Info.Println("Download packets from", t)
 		packetsList, err := sletat.FetchPacketsList(t)
@@ -25,13 +23,11 @@ func fetchPackets(t string) chan data.PacketInfo {
 				continue
 			}
 
-			packets <- packet
+			for _,channel := range channels {
+				channel <- packet
+			}
 		}
-
-		close(packets)
 	}()
-
-	return packets
 }
 
 func skipPacket(packet *data.PacketInfo) bool {

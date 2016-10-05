@@ -7,6 +7,7 @@ import (
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/prefilter"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/data"
 )
 
 var (
@@ -33,11 +34,22 @@ func Pipe(stat *stat.Tours) {
 		return
 	}
 
-	packets := fetchPackets(t)
+	data_channels := [2]chan data.PacketInfo{
+		make(chan data.PacketInfo, 100),
+		make(chan data.PacketInfo, 100),
+	}
 
-	end := fetchTours(packets, stat)
+	fetchPackets(data_channels, t)
 
-	finalize(end, stat)
+	ends_channels := [2]chan bool{
+		make(chan bool),
+		make(chan bool),
+	}
+
+	fetchTours(data_channels[0], stat, ends_channels[0])
+	fetchPartnersData(data_channels[1], stat, ends_channels[1])
+
+	finalize(ends_channels, stat, data_channels)
 }
 
 func End() {

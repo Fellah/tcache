@@ -22,9 +22,7 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
-	end := make(chan bool)
-
+func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end <-chan bool) {
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
 
@@ -81,8 +79,6 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
 		end <- true
 		close(end)
 	}()
-
-	return end
 }
 
 func preProcessTour(packet data.PacketInfo, tour *data.Tour) {
@@ -148,10 +144,20 @@ func isSkipped(tour *data.Tour) bool {
 	return false
 }
 
-func finalize(end <-chan bool, stat *stat.Tours) {
+func finalize(ends []chan bool, stat *stat.Tours, channels []chan data.PacketInfo) {
 	go func() {
-		<-end
+		// wait end signal from all end channels
+		for _,end := range ends {
+			<-end
+			close(end)
+		}
+
+		for _,channel := range channels {
+			close(channel)
+		}
+
 		stat.Output()
+
 		log.Info.Println("END")
 	}()
 }
