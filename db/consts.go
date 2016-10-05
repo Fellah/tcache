@@ -54,6 +54,6 @@ const (
 	`
 
 	toursUpdate = `
-		price = EXCLUDED.price WHERE EXCLUDED.price < cst.price
+		price = EXCLUDED.price
 	`
 )
