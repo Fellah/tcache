@@ -12,25 +12,23 @@ import (
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
-func FetchTours(packetId string) (chan data.Tour, error) {
+func FetchTours(packetId string, tours_channels []chan data.Tour) (error) {
 	url := bulkCacheUrl + packetId
 	log.Info.Println("Download:", url)
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	gzipReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	tours := make(chan data.Tour)
 	go func() {
 		defer resp.Body.Close()
 		defer gzipReader.Close()
-		defer close(tours)
 
 		decoder := xml.NewDecoder(gzipReader)
 		for {
@@ -49,14 +47,15 @@ func FetchTours(packetId string) (chan data.Tour, error) {
 				if se.Name.Local == "tour" {
 					tour := data.Tour{}
 					decoder.DecodeElement(&tour, &se)
-
-					if prefilter.ForHotel(&tour) {
-						tours <- tour
+					for index,tours := range tours_channels {
+						if prefilter.ForHotel(&tour, index) {
+							tours <- tour
+						}
 					}
 				}
 			}
 		}
 	}()
 
-	return tours, nil
+	return nil
 }

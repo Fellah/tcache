@@ -22,7 +22,7 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end <-chan bool) {
+func fetchTours(packets <-chan data.PacketInfo, tours_channels []chan data.Tour, stat *stat.Tours, end chan bool) {
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
 
@@ -34,7 +34,8 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end <-chan boo
 				var count uint64 = 0
 				var skipped uint64 = 0
 
-				tours, err := sletat.FetchTours(packet.Id)
+				tours := tours_channels[0]
+				err := sletat.FetchTours(packet.Id, tours_channels)
 				if err != nil {
 					log.Error.Println(err)
 					continue
@@ -144,9 +145,9 @@ func isSkipped(tour *data.Tour) bool {
 	return false
 }
 
-func finalize(ends []chan bool, stat *stat.Tours, channels []chan data.PacketInfo) {
+func finalize(ends []chan bool, stat *stat.Tours, channels []chan data.Tour) {
 	go func() {
-		// wait end signal from all end channels
+		// wait end signal from all channels
 		for _,end := range ends {
 			<-end
 			close(end)

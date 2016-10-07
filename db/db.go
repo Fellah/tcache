@@ -47,3 +47,31 @@ func Close() {
 		log.Error.Fatal(err)
 	}
 }
+
+
+func sendQueryParams(query string, params []string) error {
+	txn, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := txn.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(params)
+	if err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+
+	if err = txn.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
