@@ -33,7 +33,7 @@ func ForHotel(tour *data.Tour, processor int) bool {
 	}
 }
 
-func ForPartnersTours(tour *data.Tour) {
+func ForPartnersTours(tour *data.Tour) bool {
 	return (tour.TicketsIncluded != 0 &&
 		(tour.HasEconomTicketsDpt == 1 || tour.HasEconomTicketsDpt == 2) &&
 		(tour.HasEconomTicketsRtn == 1 || tour.HasEconomTicketsRtn == 2) &&

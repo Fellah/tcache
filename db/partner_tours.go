@@ -2,13 +2,9 @@ package db
 
 import (
 	"github.com/fellah/tcache/log"
-	"strings"
 )
 
-func SavePartnerTour(hash_key string, tour *map[string]string) {
-	key_parts := strings.Split(hash_key, "-")
-	group_hash := key_parts[1]
-
+func SavePartnerTour(group_hash string, tour map[string]string) {
 	query := `
 		INSERT INTO cached_sletat_tours as cst (
 			group_hash,
@@ -42,7 +38,7 @@ func SavePartnerTour(hash_key string, tour *map[string]string) {
 	`
 
 	var values []string = []string{
-		"\x"+group_hash,
+		"\\x"+group_hash,
 		tour["nights"],	tour["adults"], tour["kids"], tour["kid1age"], tour["kid2age"],
 		tour["kid3age"], tour["checkin"], tour["dpt_city_id"], tour["town_id"],
 		tour["meal_present"], tour["operator_id"],

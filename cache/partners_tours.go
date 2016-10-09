@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/db"
+	"strings"
 )
 
 // Struct for save tours:
@@ -99,9 +100,14 @@ func RegisterTourGroup(tour data.Tour) {
 }
 
 func SaveTourGroupsToDB() {
-	for hash_key := redis_client.LPop("pt_tours_groups_keys").Val();
-		hash_key != nil;
-		hash_key = redis_client.LPop("pt_tours_groups_keys").Val() {
+	for row := redis_client.LPop("pt_tours_groups_keys");
+		row.Err() == nil;
+		row = redis_client.LPop("pt_tours_groups_keys") {
+
+		hash_key := row.Val()
+		if hash_key == "" {
+			continue
+		}
 
 		tour, err := redis_client.HGetAll(hash_key).Result()
 		if err != nil {
@@ -109,6 +115,10 @@ func SaveTourGroupsToDB() {
 			continue
 		}
 
-		db.SavePartnerTour(hash_key, tour)
+		key_parts := strings.Split(hash_key, "-")
+		group_hash := key_parts[1]
+
+		db.SavePartnerTour(group_hash, tour)
+		redis_client.Del(hash_key)
 	}
 }
