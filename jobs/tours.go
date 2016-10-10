@@ -9,6 +9,8 @@ import (
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/cache"
+	"github.com/fellah/tcache/prefilter"
 )
 
 func init() {
@@ -22,7 +24,7 @@ const (
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan data.PacketInfo, tours_channels []chan data.Tour, stat *stat.Tours, end chan bool) {
+func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool) {
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
 
@@ -34,28 +36,37 @@ func fetchTours(packets <-chan data.PacketInfo, tours_channels []chan data.Tour,
 				var count uint64 = 0
 				var skipped uint64 = 0
 
+				log.Info.Println("fetchTours Run ...")
+				tours_channels, err := sletat.FetchTours(packet.Id, tours_channels_used)
 				tours := tours_channels[0]
-				err := sletat.FetchTours(packet.Id, tours_channels)
+
 				if err != nil {
 					log.Error.Println(err)
 					continue
 				}
 
 				collect := make(chan data.Tour)
+				log.Info.Println("fetchTours collect tours Run ...")
 				go collectTours(collect, stat)
 
 				// Process tours before send the to the database.
+				log.Info.Println("fetchTours tours loop Run ...")
 				for tour := range tours {
 					count++
 
 					preProcessTour(packet, &tour)
 
+					processTour(packet, &tour)
+
+					// Partners
+					if prefilter.ForPartnersTours(&tour) {
+						cache.RegisterTourGroup(tour)
+					}
+
 					if isSkipped(&tour) {
 						skipped++
 						continue
 					}
-
-					processTour(packet, &tour)
 
 					if !isKidsValid(&tour) {
 						stat.KidsIssue <- 1
@@ -63,6 +74,7 @@ func fetchTours(packets <-chan data.PacketInfo, tours_channels []chan data.Tour,
 
 					collect <- tour
 				}
+				log.Info.Println("fetchTours tours loop FINISH ...")
 
 				close(collect)
 
@@ -70,12 +82,16 @@ func fetchTours(packets <-chan data.PacketInfo, tours_channels []chan data.Tour,
 				stat.Skipped <- skipped
 			}
 
+			log.Info.Println("fetchTours gorotine FINISH")
 			wg.Done()
 		}()
 	}
 
 	go func() {
 		wg.Wait()
+		log.Info.Println("fetchTours FINISH ...")
+
+		cache.SaveTourGroupsToDB()
 
 		end <- true
 		close(end)
@@ -145,16 +161,12 @@ func isSkipped(tour *data.Tour) bool {
 	return false
 }
 
-func finalize(ends []chan bool, stat *stat.Tours, channels []chan data.Tour) {
+func finalize(ends []chan bool, stat *stat.Tours) {
 	go func() {
 		// wait end signal from all channels
 		for _,end := range ends {
 			<-end
 			close(end)
-		}
-
-		for _,channel := range channels {
-			close(channel)
 		}
 
 		stat.Output()

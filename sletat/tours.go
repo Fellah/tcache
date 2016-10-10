@@ -12,20 +12,24 @@ import (
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
-func FetchTours(packetId string, tours_channels []chan data.Tour) (error) {
+func FetchTours(packetId string, tours_channel_count int) ([]chan data.Tour, error) {
 	url := bulkCacheUrl + packetId
 	log.Info.Println("Download:", url)
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	gzipReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var tours_channels []chan data.Tour = make([]chan data.Tour, tours_channel_count)
+	for i := 0; i < tours_channel_count; i++ {
+		tours_channels[i] = make(chan data.Tour)
+	}
 	go func() {
 		defer resp.Body.Close()
 		defer gzipReader.Close()
@@ -55,7 +59,13 @@ func FetchTours(packetId string, tours_channels []chan data.Tour) (error) {
 				}
 			}
 		}
+
+		log.Info.Println("FetchTours FINISH")
+		for _,channel := range tours_channels {
+			close(channel)
+		}
+		log.Info.Println("FetchTours tours channels closed")
 	}()
 
-	return nil
+	return tours_channels, nil
 }

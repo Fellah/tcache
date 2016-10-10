@@ -6,24 +6,37 @@ import (
 	"github.com/fellah/tcache/sletat"
 )
 
-func fetchPackets(channel chan<- data.PacketInfo, t string) {
-	log.Info.Println("Download packets from", t)
-	packetsList, err := sletat.FetchPacketsList(t)
-	if err != nil {
-		log.Error.Println(err)
-	}
+func fetchPackets(t string) (channel chan data.PacketInfo) {
+	packets := make(chan data.PacketInfo)
 
-	for _, packet := range packetsList {
-		if skipPacket(&packet) {
-			continue
+	go func() {
+		log.Info.Println("Download packets from", t)
+		packetsList, err := sletat.FetchPacketsList(t)
+		if err != nil {
+			log.Error.Println(err)
 		}
 
-		if !isOperatorActive(packet.SourceId) {
-			continue
+		log.Info.Println("fetchPackets list...")
+		for _, packet := range packetsList {
+			if skipPacket(&packet) {
+				log.Info.Println("fetchPackets packet skip...")
+				continue
+			}
+
+			if !isOperatorActive(packet.SourceId) {
+				log.Info.Println("fetchPackets packet skip (operator)...")
+				continue
+			}
+
+			log.Info.Println("fetchPackets packet to work")
+			channel <- packet
 		}
 
-		channel <- packet
-	}
+		close(packets)
+		log.Info.Println("fetchPackets done")
+	}()
+
+	return packets
 }
 
 func skipPacket(packet *data.PacketInfo) bool {

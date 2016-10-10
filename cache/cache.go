@@ -31,3 +31,9 @@ func Init() {
 		DB:       redis_db_num,
 	})
 }
+
+func Clear() {
+	log.Info.Println("CACHE: clear...")
+	ClearTourGroups()
+	log.Info.Println("CACHE: clear done")
+}

@@ -7,12 +7,12 @@ import (
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/prefilter"
 	"github.com/fellah/tcache/stat"
-	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/cache"
 )
 
 var (
 	ticker = time.NewTicker(2 * time.Hour)
+	tours_channels_used = 1
 )
 
 func Start() {
@@ -29,6 +29,7 @@ func Pipe(stat *stat.Tours) {
 	queryCities()
 	prefilter.PrepareData()
 	cache.Init()
+	cache.Clear()
 
 	t, err := makeDownloadTime()
 	if err != nil {
@@ -36,30 +37,15 @@ func Pipe(stat *stat.Tours) {
 		return
 	}
 
-	packets_channel := make(chan data.PacketInfo, 100)
-
-	go fetchPackets(packets_channel, t)
-
-	var tours_channels []chan data.Tour = []chan data.Tour{
-		make(chan data.Tour, 100),
-		make(chan data.Tour, 100),
-	}
+	packets_channel := fetchPackets(t)
 
 	var ends_channels []chan bool = []chan bool{
 		make(chan bool),
-		make(chan bool),
 	}
 
-	/*
-	 TODO: Change fetchTours for only load tours and send it in channels
-	 Need separate processor for ours_channels[0] called here
-  	*/
-	fetchTours(packets_channel, tours_channels, stat, ends_channels[0])
+	fetchTours(packets_channel, stat, ends_channels[0])
 
-	// Processors for tours
-	fetchPartnersData(tours_channels[1], ends_channels[1])
-
-	finalize(ends_channels, stat, tours_channels)
+	finalize(ends_channels, stat)
 }
 
 func End() {

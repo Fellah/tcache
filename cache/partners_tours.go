@@ -42,9 +42,21 @@ func RegisterTourGroup(tour data.Tour) {
 	io.WriteString(h, tour.Checkin)
 	io.WriteString(h, strconv.Itoa(tour.Nights))
 	io.WriteString(h, strconv.Itoa(tour.Kids))
-	io.WriteString(h, strconv.Itoa(*(tour.Kid1Age)))
-	io.WriteString(h, strconv.Itoa(*(tour.Kid2Age)))
-	io.WriteString(h, strconv.Itoa(*(tour.Kid3Age)))
+	kid1age := -1
+	if tour.Kid1Age != nil {
+		kid1age = *(tour.Kid1Age)
+	}
+	io.WriteString(h, strconv.Itoa(kid1age))
+	kid2age := -1
+	if tour.Kid2Age != nil {
+		kid2age = *(tour.Kid2Age)
+	}
+	io.WriteString(h, strconv.Itoa(kid2age))
+	kid3age := -1
+	if tour.Kid3Age != nil {
+		kid3age = *(tour.Kid3Age)
+	}
+	io.WriteString(h, strconv.Itoa(kid3age))
 	io.WriteString(h, strconv.Itoa(tour.DptCityId))
 	io.WriteString(h, strconv.FormatBool(meal_present))
 
@@ -67,6 +79,15 @@ func RegisterTourGroup(tour data.Tour) {
 				"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
 				"sletat_request_id": strconv.Itoa(tour.RequestId),
 				"sletat_offer_id": strconv.FormatInt(tour.OfferId, 10),
+
+				"few_econom_tickets_dpt": strconv.Itoa(tour.FewEconomTicketsDpt),
+				"few_econom_tickets_rtn": strconv.Itoa(tour.FewEconomTicketsRtn),
+				"few_places_in_hotel": strconv.Itoa(tour.FewPlacesInHotel),
+				"flags": strconv.FormatInt(tour.Flags, 10),
+				"description": tour.Description,
+				"tour_url": tour.TourUrl,
+				"room_name": tour.RoomName,
+				"receiving_party": tour.ReceivingParty,
 			})
 		}
 	} else {
@@ -76,9 +97,9 @@ func RegisterTourGroup(tour data.Tour) {
 			"nights": strconv.Itoa(tour.Nights),
 			"adults": strconv.Itoa(tour.Adults),
 			"kids": strconv.Itoa(tour.Kids),
-			"kid1age": strconv.Itoa(*(tour.Kid1Age)),
-			"kid2age": strconv.Itoa(*(tour.Kid2Age)),
-			"kid3age": strconv.Itoa(*(tour.Kid3Age)),
+			"kid1age": strconv.Itoa(kid1age),
+			"kid2age": strconv.Itoa(kid2age),
+			"kid3age": strconv.Itoa(kid3age),
 			"dpt_city_id": strconv.Itoa(tour.DptCityId),
 			"town_id": strconv.Itoa(tour.TownId),
 			"meal_present": strconv.FormatBool(meal_present),
@@ -92,6 +113,15 @@ func RegisterTourGroup(tour data.Tour) {
 			"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
 			"sletat_request_id": strconv.Itoa(tour.RequestId),
 			"sletat_offer_id": strconv.FormatInt(tour.OfferId, 10),
+
+			"few_econom_tickets_dpt": strconv.Itoa(tour.FewEconomTicketsDpt),
+			"few_econom_tickets_rtn": strconv.Itoa(tour.FewEconomTicketsRtn),
+			"few_places_in_hotel": strconv.Itoa(tour.FewPlacesInHotel),
+			"flags": strconv.FormatInt(tour.Flags, 10),
+			"description": tour.Description,
+			"tour_url": tour.TourUrl,
+			"room_name": tour.RoomName,
+			"receiving_party": tour.ReceivingParty,
 		})
 
 		// Add hash_key to list
@@ -100,6 +130,7 @@ func RegisterTourGroup(tour data.Tour) {
 }
 
 func SaveTourGroupsToDB() {
+	log.Info.Println("SaveTourGroupsToDB START...")
 	for row := redis_client.LPop("pt_tours_groups_keys");
 		row.Err() == nil;
 		row = redis_client.LPop("pt_tours_groups_keys") {
@@ -121,4 +152,19 @@ func SaveTourGroupsToDB() {
 		db.SavePartnerTour(group_hash, tour)
 		redis_client.Del(hash_key)
 	}
+	log.Info.Println("SaveTourGroupsToDB DONE")
+}
+
+func ClearTourGroups() {
+	for row := redis_client.LPop("pt_tours_groups_keys"); row.Err() == nil;
+	    row = redis_client.LPop("pt_tours_groups_keys") {
+
+		hash_key := row.Val()
+		if hash_key == "" {
+			continue
+		}
+
+		redis_client.Del(hash_key)
+	}
+	redis_client.Del("pt_tours_groups_keys")
 }
