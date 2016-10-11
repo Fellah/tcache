@@ -94,7 +94,6 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 		cache.SaveTourGroupsToDB()
 
 		end <- true
-		close(end)
 	}()
 }
 
@@ -161,13 +160,11 @@ func isSkipped(tour *data.Tour) bool {
 	return false
 }
 
-func finalize(ends []chan bool, stat *stat.Tours) {
+func finalize(end chan bool, stat *stat.Tours) {
 	go func() {
 		// wait end signal from all channels
-		for _,end := range ends {
-			<-end
-			close(end)
-		}
+		<-end
+		close(end)
 
 		stat.Output()
 

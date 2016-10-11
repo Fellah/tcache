@@ -39,13 +39,11 @@ func Pipe(stat *stat.Tours) {
 
 	packets_channel := fetchPackets(t)
 
-	var ends_channels []chan bool = []chan bool{
-		make(chan bool),
-	}
+	end := make(chan bool)
 
-	fetchTours(packets_channel, stat, ends_channels[0])
+	fetchTours(packets_channel, stat, end)
 
-	finalize(ends_channels, stat)
+	finalize(end, stat)
 }
 
 func End() {
