@@ -25,12 +25,8 @@ func PrepareData() {
 	}
 }
 
-func ForHotel(tour *data.Tour, processor int) bool {
-	if processor == 0 {
-		return isHotelGood(tour.HotelId)
-	} else {
-		return true
-	}
+func ForHotel(tour *data.Tour) bool {
+	return isHotelGood(tour.HotelId)
 }
 
 func ForPartnersTours(tour *data.Tour) bool {

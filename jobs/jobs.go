@@ -12,6 +12,7 @@ import (
 
 var (
 	ticker = time.NewTicker(2 * time.Hour)
+	ticker_save_data = time.NewTicker(60 * time.Minute)
 	tours_channels_used = 1
 )
 
@@ -48,6 +49,7 @@ func Pipe(stat *stat.Tours) {
 
 func End() {
 	db.Close()
+	ticker_save_data.Stop()
 	ticker.Stop()
 }
 

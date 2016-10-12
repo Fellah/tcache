@@ -9,6 +9,7 @@ import (
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/db"
 	"strings"
+	"encoding/base64"
 )
 
 // Struct for save tours:
@@ -61,7 +62,9 @@ func RegisterTourGroup(tour data.Tour) {
 	io.WriteString(h, strconv.FormatBool(meal_present))
 
 	hash_sum := h.Sum(nil)
-	hash_key := fmt.Sprintf("pt_tours_groups-%x", hash_sum)
+	str := base64.StdEncoding.EncodeToString(hash_sum)
+
+	hash_key := "pt_tg-"+str
 
 	if redis_client.Exists(hash_key).Val() {
 		old_price_str := redis_client.HGet(hash_key, "price").Val()
@@ -130,9 +133,13 @@ func RegisterTourGroup(tour data.Tour) {
 }
 
 func SaveTourGroupsToDB() {
-	log.Info.Println("SaveTourGroupsToDB START...")
+	count := redis_client.LLen("pt_tours_groups_keys").Val()
+	log.Info.Println("SaveTourGroupsToDB START (", count, ")...")
+
+	batch_size := 1000
+	transaction, trx_err := db.StartTransaction()
 	for row := redis_client.LPop("pt_tours_groups_keys");
-		row.Err() == nil;
+		row.Err() == nil && trx_err == nil;
 		row = redis_client.LPop("pt_tours_groups_keys") {
 
 		hash_key := row.Val()
@@ -147,12 +154,33 @@ func SaveTourGroupsToDB() {
 		}
 
 		key_parts := strings.Split(hash_key, "-")
-		group_hash := key_parts[1]
+		group_hash_str := key_parts[1]
 
-		db.SavePartnerTour(group_hash, tour)
+		hash_bin, err := base64.StdEncoding.DecodeString(group_hash_str)
+		var group_hash_hex string
+		if err != nil {
+			continue
+		} else {
+			group_hash_hex = fmt.Sprintf("%x", hash_bin)
+		}
+
+		db.SavePartnerTour(group_hash_hex, tour, transaction)
 		redis_client.Del(hash_key)
+
+		count--
+		if count < 0 {
+			break
+		}
+
+		batch_size--
+		if batch_size <= 0 {
+			db.CommitTransaction(transaction)
+			transaction, trx_err = db.StartTransaction()
+			batch_size = 1000
+		}
 	}
-	log.Info.Println("SaveTourGroupsToDB DONE")
+	db.CommitTransaction(transaction)
+	log.Info.Println("SaveTourGroupsToDB DONE (", count, ")")
 }
 
 func ClearTourGroups() {

@@ -3,9 +3,10 @@ package db
 import (
 	"github.com/fellah/tcache/log"
 	"strconv"
+	"database/sql"
 )
 
-func SavePartnerTour(group_hash string, tour map[string]string) {
+func SavePartnerTour(group_hash string, tour map[string]string, transaction *sql.Tx) {
 	query := `
 		INSERT INTO partners_tours as cst (
 			group_hash,
@@ -49,10 +50,7 @@ func SavePartnerTour(group_hash string, tour map[string]string) {
 		   	receiving_party = EXCLUDED.receiving_party,
 			updated_at = NOW()
 	`
-	log.Info.Println("CHECKIN:", tour["checkin"])
-	log.Info.Println("UPDATE_DATE:", tour["update_date"])
-
-	err := sendQueryParams(query, "\\x"+group_hash,
+	err := SendQueryParamsRaw(transaction, query, "\\x" + group_hash,
 		a2i(tour["nights"]), a2i(tour["adults"]), a2i(tour["kids"]),
 		a2i(tour["kid1age"]), a2i(tour["kid2age"]), a2i(tour["kid3age"]),
 		tour["checkin"],
@@ -67,6 +65,7 @@ func SavePartnerTour(group_hash string, tour map[string]string) {
 		a2i64(tour["flags"]),
 		tour["description"], tour["tour_url"], tour["room_name"], tour["receiving_party"],
 	)
+
 	if err != nil {
 		log.Error.Println(err)
 	}

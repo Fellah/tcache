@@ -52,7 +52,7 @@ func Close() {
 func sendQueryParams(query string, params ...interface{}) error {
 	CheckConnect()
 
-	txn, err := startTransaction()
+	txn, err := StartTransaction()
 
 	stmt, err := txn.Prepare(query)
 	if err != nil {
@@ -68,18 +68,18 @@ func sendQueryParams(query string, params ...interface{}) error {
 		return err
 	}
 
-	commitTransaction(txn)
+	CommitTransaction(txn)
 
 	return nil
 }
 
-func startTransaction() (*sql.Tx, error) {
+func StartTransaction() (*sql.Tx, error) {
 	CheckConnect()
 
 	return db.Begin()
 }
 
-func sendQueryParamsRaw(txn *sql.Tx, query string, params ...interface{}) error {
+func SendQueryParamsRaw(txn *sql.Tx, query string, params ...interface{}) error {
 	stmt, err := txn.Prepare(query)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func sendQueryParamsRaw(txn *sql.Tx, query string, params ...interface{}) error 
 	return nil
 }
 
-func commitTransaction(txn *sql.Tx) error {
+func CommitTransaction(txn *sql.Tx) error {
 	if err := txn.Commit(); err != nil {
 		return err
 	}
