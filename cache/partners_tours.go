@@ -48,21 +48,28 @@ func RegisterTourGroup(tour data.Tour) {
 	io.WriteString(h, tour.Checkin)
 	io.WriteString(h, strconv.Itoa(tour.Nights))
 	io.WriteString(h, strconv.Itoa(tour.Kids))
+
 	kid1age := -1
 	if tour.Kid1Age != nil {
 		kid1age = *(tour.Kid1Age)
 	}
+
 	io.WriteString(h, strconv.Itoa(kid1age))
+
 	kid2age := -1
 	if tour.Kid2Age != nil {
 		kid2age = *(tour.Kid2Age)
 	}
+
 	io.WriteString(h, strconv.Itoa(kid2age))
+
 	kid3age := -1
 	if tour.Kid3Age != nil {
 		kid3age = *(tour.Kid3Age)
 	}
+
 	io.WriteString(h, strconv.Itoa(kid3age))
+
 	io.WriteString(h, strconv.Itoa(tour.DptCityId))
 	io.WriteString(h, strconv.FormatBool(meal_present))
 

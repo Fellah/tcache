@@ -17,10 +17,13 @@ func Init() {
 	if redis_addr == "" {
 		redis_addr = "localhost:6379"
 	}
+
 	if redis_db == "" {
 		redis_db = "0"
 	}
+
 	redis_db_num, err := strconv.Atoi(redis_db)
+
 	if err != nil {
 		log.Error.Fatalln(err)
 	}

@@ -11,15 +11,15 @@ const (
 
 func NewTours() *Tours {
 	tours := &Tours{
-		total: 0,
-		Total:     make(chan uint64),
-		skipped: 0,
-		Skipped:   make(chan uint64),
-		kidsIssue: 0,
-		KidsIssue: make(chan uint64),
-		End: make(chan bool),
-		historyUsed: 0,
-		currentHour: "",
+		total:		0,
+		Total:		make(chan uint64),
+		skipped:	0,
+		Skipped:	make(chan uint64),
+		kidsIssue:	0,
+		KidsIssue:	make(chan uint64),
+		End:		make(chan bool),
+		historyUsed:	0,
+		currentHour:	"",
 	}
 
 	go tours.collect()

@@ -16,8 +16,8 @@ type Tour struct {
 	TownId     		int    `xml:"townId,attr"`
 	MealId     		int    `xml:"mealId,attr"`
 	MealName   		string `xml:"mealName,attr"`
-	Hash       		string `xml:"hash,attr"`
-	TicketsIncluded 	int `xml:"ticketsIncluded,attr"`
+	Hash			string `xml:"hash,attr"`
+	TicketsIncluded		int `xml:"ticketsIncluded,attr"`
 	HasEconomTicketsDpt	int `xml:"hasEconomTicketsDpt,attr"`
 	HasEconomTicketsRtn	int `xml:"hasEconomTicketsRtn,attr"`
 	HotelIsInStop		int `xml:"hotelIsInStop,attr"`
