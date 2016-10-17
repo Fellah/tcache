@@ -195,7 +195,7 @@ func isSkipped(tour *data.Tour) bool {
 		return true
 	}
 
-	if prefilter.ForHotel(tour) {
+	if !prefilter.ForHotel(tour) {
 		return true
 	}
 
