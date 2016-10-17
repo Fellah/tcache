@@ -86,6 +86,10 @@ func CleanPartnerTours() {
 	db.Query("VACUUM ANALYZE partners_tours")
 }
 
+func IsPresent(group_hash string) {
+
+}
+
 func a2i(str string) (int) {
 	i, err := strconv.Atoi(str)
 	if err == nil {

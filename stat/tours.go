@@ -17,7 +17,8 @@ func NewTours() *Tours {
 		Skipped:	make(chan uint64),
 		kidsIssue:	0,
 		KidsIssue:	make(chan uint64),
-		End:		make(chan bool),
+		idle: 		0,
+		Idle: 		make(chan uint64),
 		historyUsed:	0,
 		currentHour:	"",
 	}
@@ -40,8 +41,6 @@ type Tours struct {
 	idle uint64
 	Idle chan uint64
 
-	End chan bool
-
 	currentHour string
 
 	history [historySize]string
@@ -57,8 +56,8 @@ func (t *Tours) collect() {
 			t.skipped += skipped
 		case kidsIssue := <-t.KidsIssue:
 			t.kidsIssue += kidsIssue
-		case idle := <-t.Idle:
-			t.idle += idle
+		case <-t.Idle:
+			t.idle += 1
 		default:
 		}
 
@@ -94,5 +93,5 @@ func (t *Tours) Output() {
 }
 
 func (t *Tours) sOutput() string {
-	return fmt.Sprintf("HOUR: %s, Tours: %d, Skipped: %d, Send: %d, Kids Issue: %d, Idle times: %d", t.currentHour, t.total, t.skipped, (t.total - t.skipped), t.kidsIssue, t.Idle)
+	return fmt.Sprintf("HOUR: %s, Tours: %d, Skipped: %d, Send: %d, Kids Issue: %d, Idle times: %d", t.currentHour, t.total, t.skipped, (t.total - t.skipped), t.kidsIssue, t.idle)
 }

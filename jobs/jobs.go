@@ -20,6 +20,7 @@ func Start() {
 	for {
 		Pipe(stat)
 		stat.Idle <- 1
+		time.Sleep(time.Second)
 	}
 }
 

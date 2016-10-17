@@ -62,18 +62,17 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 
 					processTour(packet, &tour)
 
-					// Partners
-					// ------
-					if prefilter.ForPartnersTours(&tour) {
-						cache.RegisterTourGroup(tour)
-					}
-					// ------
-
 					if !isOperatorActive(packet.SourceId) {
+						skipped++
 						continue
 					}
 
-					if isSkipped(&tour) {
+					if !isCityActive(tour.TownId) {
+						skipped++
+						continue
+					}
+
+					if !isFullInfo(&tour) {
 						skipped++
 						continue
 					}
@@ -82,7 +81,17 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 						stat.KidsIssue <- 1
 					}
 
-					collect <- tour
+					// Partners tours
+					if prefilter.IsHotelNameActive(tour.HotelId) {
+						cache.RegisterTourGroup(tour)
+					}
+
+					// Tours cache
+					if prefilter.IsHotelNameActivePictures(tour.HotelId) {
+						collect <- tour
+					} else {
+						skipped++
+					}
 				}
 				log.Info.Println("fetchTours tours loop FINISH ...")
 
@@ -182,22 +191,10 @@ func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
 	mx.Unlock()
 }
 
-func isSkipped(tour *data.Tour) bool {
-	if tour.TicketsIncluded != 1 ||
-		(tour.HasEconomTicketsDpt != 1 && tour.HasEconomTicketsDpt != 2) ||
-		(tour.HasEconomTicketsRtn != 1 && tour.HasEconomTicketsRtn != 2) ||
-		(tour.HotelIsInStop != 0 && tour.HotelIsInStop != 2) ||
-		tour.HotelId == 0 {
-		return true
-	}
-
-	if !isCityActive(tour.TownId) {
-		return true
-	}
-
-	if !prefilter.ForHotel(tour) {
-		return true
-	}
-
-	return false
+func isFullInfo(tour *data.Tour) bool {
+	return (tour.TicketsIncluded == 1 &&
+		(tour.HasEconomTicketsDpt == 1 || tour.HasEconomTicketsDpt == 2) &&
+		(tour.HasEconomTicketsRtn == 1 || tour.HasEconomTicketsRtn == 2) &&
+		(tour.HotelIsInStop == 0 || tour.HotelIsInStop == 2) &&
+		tour.HotelId != 0)
 }

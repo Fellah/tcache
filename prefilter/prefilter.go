@@ -6,7 +6,8 @@ import (
 	"github.com/fellah/tcache/log"
 )
 
-var hotelsIds []int
+var hotelsNAPIds []int
+var hotelsNAIds []int
 var townsIds []int
 
 // Public
@@ -14,7 +15,12 @@ var townsIds []int
 func PrepareData() {
 	var err error
 
-	hotelsIds, err = db.QueryHotels()
+	hotelsNAPIds, err = db.QueryHotelsNameActivePictures()
+	if err != nil {
+		log.Error.Fatal(err)
+	}
+
+	hotelsNAIds, err = db.QueryHotelsNameActiveNoImages()
 	if err != nil {
 		log.Error.Fatal(err)
 	}
@@ -23,10 +29,6 @@ func PrepareData() {
 	if err != nil {
 		log.Error.Fatal(err)
 	}
-}
-
-func ForHotel(tour *data.Tour) bool {
-	return isHotelGood(tour.HotelId)
 }
 
 func ForPartnersTours(tour *data.Tour) bool {
@@ -38,10 +40,12 @@ func ForPartnersTours(tour *data.Tour) bool {
 		isTownGood(tour.TownId))
 }
 
-// Private
+func IsHotelNameActivePictures(hotelId int) bool {
+	return isInListInt(hotelsNAPIds, hotelId)
+}
 
-func isHotelGood(hotelId int) bool {
-	return isInListInt(hotelsIds, hotelId)
+func IsHotelNameActive(hotelId int) bool {
+	return (isInListInt(hotelsNAPIds, hotelId) || isInListInt(hotelsNAIds, hotelId))
 }
 
 func isTownGood(townId int) bool {

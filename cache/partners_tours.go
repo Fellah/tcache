@@ -106,6 +106,10 @@ func RegisterTourGroup(tour data.Tour) {
 			})
 		}
 	} else {
+		// Check in DB
+
+
+
 		// Save full data of record
 		redis_client.HMSet(hash_key, map[string]string{
 			"checkin": tour.Checkin,
