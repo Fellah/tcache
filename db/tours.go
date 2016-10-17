@@ -104,7 +104,10 @@ func makeToursValues(tours []data.Tour) string {
 			tour.TownId, tour.MealId, tour.CreateDate,
 			tour.UpdateDate, tour.DptCityId, tour.CountryId, tour.PriceByr,
 			tour.PriceEur, tour.PriceUsd, true, *tour.Kid1Age,
-			*tour.Kid2Age, *tour.Kid3Age)
+			*tour.Kid2Age, *tour.Kid3Age,
+			tour.TicketsIncluded, tour.HasEconomTicketsDpt,
+			tour.HasEconomTicketsRtn, tour.HotelIsInStop,
+		)
 	}
 
 	return strings.Join(values, "), (")

@@ -183,6 +183,14 @@ func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
 }
 
 func isSkipped(tour *data.Tour) bool {
+	if tour.TicketsIncluded != 1 ||
+		(tour.HasEconomTicketsDpt != 1 && tour.HasEconomTicketsDpt != 2) ||
+		(tour.HasEconomTicketsRtn != 1 && tour.HasEconomTicketsRtn != 2) ||
+		(tour.HotelIsInStop != 0 && tour.HotelIsInStop != 2) ||
+		tour.HotelId == 0 {
+		return true
+	}
+
 	if !isCityActive(tour.TownId) {
 		return true
 	}

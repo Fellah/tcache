@@ -7,7 +7,8 @@ const (
 		town_id, meal_id, created_at,
 		updated_at, dpt_city_id, country_id, price_byr,
 		price_eur, price_usd, active, kid1age,
-		kid2age, kid3age
+		kid2age, kid3age,
+		tickets_included, has_econom_tickets_dpt, has_econom_tickets_rtn, hotel_is_in_stop
 	`
 
 	toursFieldsPartition = toursFields + `, updated_price`
@@ -39,7 +40,8 @@ const (
 		%d, %d, '%s', '%s',
 		%d, %d, %d, %d,
 		%d, %t, %d, %d,
-		%d
+		%d,
+		'%d', '%d', '%d', '%d'
 	`
 
 	toursValuesPartition = toursValues + `, %s`
@@ -54,6 +56,12 @@ const (
 	`
 
 	toursUpdate = `
-		price = EXCLUDED.price WHERE EXCLUDED.price < cst.price
+		price = EXCLUDED.price,
+		source_id = EXCLUDED.source_id,
+		tickets_included = EXCLUDED.tickets_included,
+		has_econom_tickets_dpt = EXCLUDED.has_econom_tickets_dpt,
+		has_econom_tickets_rtn = EXCLUDED.has_econom_tickets_rtn,
+		hotel_is_in_stop = EXCLUDED.hotel_is_in_stop
+		WHERE EXCLUDED.price < cst.price
 	`
 )
