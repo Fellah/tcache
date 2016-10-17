@@ -11,7 +11,7 @@ import (
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
 
-func FetchTours(packetId string, tours_channel_count int) (chan data.Tour, error) {
+func FetchTours(packetId string) (chan data.Tour, error) {
 	url := bulkCacheUrl + packetId
 	log.Info.Println("Download:", url)
 

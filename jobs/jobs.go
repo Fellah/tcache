@@ -11,9 +11,7 @@ import (
 )
 
 var (
-	ticker = time.NewTicker(2 * time.Hour)
 	ticker_save_data = time.NewTicker(60 * time.Minute)
-	tours_channels_used = 1
 )
 
 func Start() {
@@ -21,7 +19,7 @@ func Start() {
 
 	for {
 		Pipe(stat)
-		<-ticker.C
+		stat.Idle <- 1
 	}
 }
 
@@ -30,7 +28,6 @@ func Pipe(stat *stat.Tours) {
 	queryCities()
 	prefilter.PrepareData()
 	cache.Init()
-	cache.Clear()
 
 	t, err := makeDownloadTime()
 	if err != nil {
@@ -47,10 +44,21 @@ func Pipe(stat *stat.Tours) {
 	finalize(end, stat)
 }
 
+
+func finalize(end chan bool, stat *stat.Tours) {
+	// wait end signal from all channels
+	<-end
+	close(end)
+
+	stat.Output()
+
+	log.Info.Println("END")
+}
+
+
 func End() {
 	db.Close()
 	ticker_save_data.Stop()
-	ticker.Stop()
 }
 
 func makeDownloadTime() (string, error) {

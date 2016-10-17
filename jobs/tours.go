@@ -19,10 +19,11 @@ func init() {
 
 var (
 	mx sync.Mutex
+	once_save_data = sync.Once{}
 )
 
 const (
-	workersNum = 1
+	workersNum = 16
 	bulkSize   = 516
 )
 
@@ -41,7 +42,7 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 				var skipped uint64 = 0
 
 				log.Info.Println("fetchTours Run ...")
-				tours, err := sletat.FetchTours(packet.Id, tours_channels_used)
+				tours, err := sletat.FetchTours(packet.Id)
 
 				if err != nil {
 					log.Error.Println(err)
@@ -62,8 +63,14 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 					processTour(packet, &tour)
 
 					// Partners
+					// ------
 					if prefilter.ForPartnersTours(&tour) {
 						cache.RegisterTourGroup(tour)
+					}
+					// ------
+
+					if !isOperatorActive(packet.SourceId) {
+						continue
 					}
 
 					if isSkipped(&tour) {
@@ -94,7 +101,7 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 		wg.Wait()
 		log.Info.Println("fetchTours FINISH ...")
 
-		cache.SaveTourGroupsToDB()
+		cache.SaveTourGroupsToDB(&once_save_data)
 
 		end_save_process <- true
 		end <- true
@@ -109,7 +116,7 @@ func cronSaveTourGroupsToDB() (chan bool) {
 			select {
 			case <-ticker_save_data.C:
 				log.Info.Println("CRON: Save Partners Group Data By")
-				go cache.SaveTourGroupsToDB()
+				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data) })
 			case <-end_chan:
 				log.Info.Println("CRON: End function - finish")
 				return
@@ -185,14 +192,4 @@ func isSkipped(tour *data.Tour) bool {
 	}
 
 	return false
-}
-
-func finalize(end chan bool, stat *stat.Tours) {
-	// wait end signal from all channels
-	<-end
-	close(end)
-
-	stat.Output()
-
-	log.Info.Println("END")
 }

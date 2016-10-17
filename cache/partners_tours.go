@@ -10,6 +10,11 @@ import (
 	"github.com/fellah/tcache/db"
 	"strings"
 	"encoding/base64"
+	"sync"
+)
+
+const (
+	savePdCommitBatchSize = 1000
 )
 
 // Struct for save tours:
@@ -132,11 +137,11 @@ func RegisterTourGroup(tour data.Tour) {
 	}
 }
 
-func SaveTourGroupsToDB() {
+func SaveTourGroupsToDB(once_flag *sync.Once) {
 	count := redis_client.LLen("pt_tours_groups_keys").Val()
 	log.Info.Println("SaveTourGroupsToDB START (", count, ")...")
 
-	batch_size := 1000
+	batch_size := savePdCommitBatchSize
 	transaction, trx_err := db.StartTransaction()
 	for row := redis_client.LPop("pt_tours_groups_keys");
 		row.Err() == nil && trx_err == nil;
@@ -176,11 +181,17 @@ func SaveTourGroupsToDB() {
 		if batch_size <= 0 {
 			db.CommitTransaction(transaction)
 			transaction, trx_err = db.StartTransaction()
-			batch_size = 1000
+			batch_size = savePdCommitBatchSize
 		}
 	}
 	db.CommitTransaction(transaction)
 	log.Info.Println("SaveTourGroupsToDB DONE (", count, ")")
+
+	log.Info.Println("SaveTourGroupsToDB clean partners tours...")
+	db.CleanPartnerTours()
+	log.Info.Println("SaveTourGroupsToDB clean partners tours DONE...")
+
+	*once_flag = sync.Once{}
 }
 
 func ClearTourGroups() {

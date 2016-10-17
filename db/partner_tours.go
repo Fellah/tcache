@@ -71,6 +71,21 @@ func SavePartnerTour(group_hash string, tour map[string]string, transaction *sql
 	}
 }
 
+func CleanPartnerTours() {
+	tx, err := StartTransaction()
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
+
+	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE checkin < NOW()")
+	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE updated_at < (NOW() - '1 hours'::interval)")
+
+	CommitTransaction(tx)
+
+	db.Query("VACUUM ANALYZE partners_tours")
+}
+
 func a2i(str string) (int) {
 	i, err := strconv.Atoi(str)
 	if err == nil {
