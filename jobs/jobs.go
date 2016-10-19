@@ -7,18 +7,22 @@ import (
 	"github.com/fellah/tcache/db"
 	"github.com/fellah/tcache/prefilter"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/cache"
 )
 
 var (
-	ticker = time.NewTicker(2 * time.Hour)
+	ticker_save_data = time.NewTicker(60 * time.Minute)
 )
 
 func Start() {
 	stat := stat.NewTours()
 
+	CronSaveTourGroupsToDB();
+
 	for {
 		Pipe(stat)
-		<-ticker.C
+		stat.Idle <- 1
+		time.Sleep(time.Minute)
 	}
 }
 
@@ -26,6 +30,7 @@ func Pipe(stat *stat.Tours) {
 	queryOperators()
 	queryCities()
 	prefilter.PrepareData()
+	cache.Init()
 
 	t, err := makeDownloadTime()
 	if err != nil {
@@ -33,16 +38,30 @@ func Pipe(stat *stat.Tours) {
 		return
 	}
 
-	packets := fetchPackets(t)
+	packets_channel := fetchPackets(t)
 
-	end := fetchTours(packets, stat)
+	end := make(chan bool)
+
+	fetchTours(packets_channel, stat, end)
 
 	finalize(end, stat)
 }
 
+
+func finalize(end chan bool, stat *stat.Tours) {
+	// wait end signal from all channels
+	<-end
+	close(end)
+
+	stat.Output()
+
+	log.Info.Println("END")
+}
+
+
 func End() {
 	db.Close()
-	ticker.Stop()
+	ticker_save_data.Stop()
 }
 
 func makeDownloadTime() (string, error) {

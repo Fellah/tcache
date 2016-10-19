@@ -7,7 +7,6 @@ import (
 
 	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/log"
-	"github.com/fellah/tcache/prefilter"
 )
 
 const bulkCacheUrl = "http://bulk.sletat.ru/BulkCacheDownload?packetId="
@@ -26,11 +25,10 @@ func FetchTours(packetId string) (chan data.Tour, error) {
 		return nil, err
 	}
 
-	tours := make(chan data.Tour)
+	tours_channel := make(chan data.Tour)
 	go func() {
 		defer resp.Body.Close()
 		defer gzipReader.Close()
-		defer close(tours)
 
 		decoder := xml.NewDecoder(gzipReader)
 		for {
@@ -50,13 +48,14 @@ func FetchTours(packetId string) (chan data.Tour, error) {
 					tour := data.Tour{}
 					decoder.DecodeElement(&tour, &se)
 
-					if prefilter.ForHotel(&tour) {
-						tours <- tour
-					}
+					tours_channel <- tour
 				}
 			}
 		}
+
+		log.Info.Println("FetchTours FINISH")
+		close(tours_channel)
 	}()
 
-	return tours, nil
+	return tours_channel, nil
 }

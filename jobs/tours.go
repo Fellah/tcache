@@ -9,22 +9,26 @@ import (
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
 	"github.com/fellah/tcache/stat"
+	"github.com/fellah/tcache/cache"
+	"github.com/fellah/tcache/prefilter"
 )
 
 func init() {
 	mx = sync.Mutex{}
 }
 
-var mx sync.Mutex
+var (
+	mx sync.Mutex
+	once_save_data = sync.Once{}
+	once_save_map_data = sync.Once{}
+)
 
 const (
 	workersNum = 16
 	bulkSize   = 516
 )
 
-func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
-	end := make(chan bool)
-
+func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool) {
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
 
@@ -36,53 +40,81 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours) chan bool {
 				var count uint64 = 0
 				var skipped uint64 = 0
 
+				log.Info.Println("fetchTours Run ...")
 				tours, err := sletat.FetchTours(packet.Id)
+
 				if err != nil {
 					log.Error.Println(err)
 					continue
 				}
 
-				collect := make(chan data.Tour)
-				go collectTours(collect, stat)
-
 				// Process tours before send the to the database.
+				log.Info.Println("fetchTours tours loop Run ...")
 				for tour := range tours {
 					count++
 
 					preProcessTour(packet, &tour)
 
-					if isSkipped(&tour) {
+					processTour(packet, &tour)
+
+					if !isOperatorActive(packet.SourceId) {
 						skipped++
 						continue
 					}
 
-					processTour(packet, &tour)
+					if !isCityActive(tour.TownId) {
+						skipped++
+						continue
+					}
+
+					if !isFullInfo(&tour) {
+						skipped++
+						continue
+					}
 
 					if !isKidsValid(&tour) {
 						stat.KidsIssue <- 1
 					}
 
-					collect <- tour
+					// Partners tours
+					if prefilter.IsHotelNameActive(tour.HotelId) {
+						cache.RegisterTourGroup(tour)
+						cache.RegisterMapTourGroup(tour)
+					} else {
+						skipped++
+					}
 				}
-
-				close(collect)
+				log.Info.Println("fetchTours tours loop FINISH ...")
 
 				stat.Total <- count
 				stat.Skipped <- skipped
 			}
 
+			log.Info.Println("fetchTours gorotine FINISH")
 			wg.Done()
 		}()
 	}
 
 	go func() {
 		wg.Wait()
+		log.Info.Println("fetchTours FINISH ...")
 
 		end <- true
-		close(end)
 	}()
+}
 
-	return end
+func CronSaveTourGroupsToDB() {
+	go func() {
+		for {
+			select {
+			case <-ticker_save_data.C:
+				log.Info.Println("CRON: Save Partners Group Data")
+				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data) })
+				log.Info.Println("CRON: Save Map Group Data")
+				once_save_map_data.Do(func() { go cache.SaveMapTourGroupsToDB(&once_save_map_data) })
+			}
+		}
+	}()
 }
 
 func preProcessTour(packet data.PacketInfo, tour *data.Tour) {
@@ -140,18 +172,10 @@ func collectTours(tours <-chan data.Tour, stat *stat.Tours) {
 	mx.Unlock()
 }
 
-func isSkipped(tour *data.Tour) bool {
-	if !isCityActive(tour.TownId) {
-		return true
-	}
-
-	return false
-}
-
-func finalize(end <-chan bool, stat *stat.Tours) {
-	go func() {
-		<-end
-		stat.Output()
-		log.Info.Println("END")
-	}()
+func isFullInfo(tour *data.Tour) bool {
+	return (tour.TicketsIncluded == 1 &&
+		(tour.HasEconomTicketsDpt == 1 || tour.HasEconomTicketsDpt == 2) &&
+		(tour.HasEconomTicketsRtn == 1 || tour.HasEconomTicketsRtn == 2) &&
+		(tour.HotelIsInStop == 0 || tour.HotelIsInStop == 2) &&
+		tour.HotelId != 0)
 }

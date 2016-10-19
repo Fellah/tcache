@@ -6,7 +6,7 @@ import (
 	"github.com/fellah/tcache/sletat"
 )
 
-func fetchPackets(t string) chan data.PacketInfo {
+func fetchPackets(t string) (channel chan data.PacketInfo) {
 	packets := make(chan data.PacketInfo)
 
 	go func() {
@@ -16,19 +16,19 @@ func fetchPackets(t string) chan data.PacketInfo {
 			log.Error.Println(err)
 		}
 
+		log.Info.Println("fetchPackets list...")
 		for _, packet := range packetsList {
 			if skipPacket(&packet) {
+				log.Info.Println("fetchPackets packet skip...")
 				continue
 			}
 
-			if !isOperatorActive(packet.SourceId) {
-				continue
-			}
-
-			packets <- packet
+			log.Info.Println("fetchPackets packet to work")
+			channel <- packet
 		}
 
 		close(packets)
+		log.Info.Println("fetchPackets done")
 	}()
 
 	return packets
