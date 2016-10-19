@@ -4,8 +4,9 @@ const (
 	toursFields = `
 		source_id, price, currency_id, checkin,
 		nights, adults, kids, hotel_id,
-		town_id, meal_id, created_at,
-		updated_at, dpt_city_id, country_id, price_byr,
+		town_id, meal_id,
+		created_at, updated_at,
+		dpt_city_id, country_id, price_byr,
 		price_eur, price_usd, active, kid1age,
 		kid2age, kid3age,
 		tickets_included, has_econom_tickets_dpt, has_econom_tickets_rtn, hotel_is_in_stop
@@ -37,7 +38,8 @@ const (
 	toursValues = `
 		%d, %d, %d, '%s',
 		%d, %d, %d, %d,
-		%d, %d, '%s', '%s',
+		%d, %d,
+		NOW(), NOW(),
 		%d, %d, %d, %d,
 		%d, %t, %d, %d,
 		%d,
@@ -61,7 +63,7 @@ const (
 		tickets_included = EXCLUDED.tickets_included,
 		has_econom_tickets_dpt = EXCLUDED.has_econom_tickets_dpt,
 		has_econom_tickets_rtn = EXCLUDED.has_econom_tickets_rtn,
-		hotel_is_in_stop = EXCLUDED.hotel_is_in_stop
-		WHERE EXCLUDED.price < cst.price
+		hotel_is_in_stop = EXCLUDED.hotel_is_in_stop,
+		updated_at = NOW()
 	`
 )

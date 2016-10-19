@@ -3,12 +3,12 @@ package db
 import (
 	"fmt"
 	"strings"
-	//"strconv"
 
 	_ "github.com/lib/pq"
 
 	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/log"
+	"database/sql"
 )
 
 func SaveTours(tours []data.Tour) {
@@ -31,41 +31,40 @@ func SaveTours(tours []data.Tour) {
 			log.Error.Println(err)
 		}
 	}
+}
 
-	/*
-		{
-			partition := "p" + strconv.Itoa(tours[0].CountryId)
 
-			values := makeToursValuesPartition(filteredTours)
-			query := fmt.Sprintf(`
-			INSERT INTO partitioned_cached_sletat_tours_partitions.%s as cst (%s)
-			VALUES (%s)
-			ON CONFLICT (%s)
-			DO UPDATE SET price = EXCLUDED.price, updated_at = now(), updated_price = now()
-			`, partition, toursFieldsPartition, values, toursUnique)
+func SaveMapTour(tour map[string]string, transaction *sql.Tx) {
+	if len(tour) == 0 {
+		return
+	}
 
-			if err := sendQuery(query); err != nil {
-				log.Error.Println(err)
-			}
-		}*/
+	values := makeMapToursValues(tour)
+	query := fmt.Sprintf(`
+		INSERT INTO cached_sletat_tours as cst (%s)
+		VALUES (%s)
+		ON CONFLICT (%s)
+		DO UPDATE SET %s
+		`, toursFields, values, toursUnique, toursUpdate)
+	err := SendQueryParamsRaw(transaction, query)
 
-	/*
-		{
-			filteredTours := removeDuplicates(tours, isEqualEHI)
+	if err != nil {
+		log.Error.Println(err)
+	}
+}
 
-			values := makeToursValuesEHI(filteredTours)
-			query := fmt.Sprintf(`
-			INSERT INTO cached_sletat_tour_by_cities as cst (%s)
-			VALUES (%s)
-			ON CONFLICT (%s)
-			DO UPDATE SET %s
-			`, toursFieldsEHI, values, toursUniqueEHI, toursUpdate)
 
-			if err := sendQuery(query); err != nil {
-				log.Error.Println("db:", err)
-			}
-		}
-	*/
+func CleanMapTours() {
+	tx, err := StartTransaction()
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
+
+	SendQueryParamsRaw(tx, "DELETE FROM cached_sletat_tours WHERE checkin < (NOW() - '1 day'::interval)")
+	SendQueryParamsRaw(tx, "DELETE FROM cached_sletat_tours WHERE updated_at < (NOW() - '1 hours'::interval)")
+
+	CommitTransaction(tx)
 }
 
 func sendQuery(query string) error {
@@ -111,6 +110,23 @@ func makeToursValues(tours []data.Tour) string {
 	}
 
 	return strings.Join(values, "), (")
+}
+
+func makeMapToursValues(tour map[string]string) string {
+	values := fmt.Sprintf(toursValues,
+		a2i(tour["source_id"]), a2i(tour["price"]),
+		a2i(tour["currency_id"]), tour["checkin"],
+		a2i(tour["nights"]), a2i(tour["adults"]), a2i(tour["kids"]),
+		a2i(tour["hotel_id"]), a2i(tour["town_id"]), a2i(tour["meal_id"]),
+		a2i(tour["dpt_city_id"]), a2i(tour["country_id"]),
+		a2i(tour["price_byr"]), a2i(tour["price_eur"]),
+		a2i(tour["price_usd"]), true,
+		a2i(tour["kid1age"]), a2i(tour["kid2age"]), a2i(tour["kid3age"]),
+		a2i(tour["tickets_included"]), a2i(tour["has_econom_tickets_dpt"]),
+		a2i(tour["has_econom_tickets_rtn"]), a2i(tour["hotel_is_in_stop"]),
+	)
+
+	return values
 }
 
 func makeToursValuesPartition(tours []data.Tour) string {

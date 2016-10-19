@@ -17,10 +17,12 @@ var (
 func Start() {
 	stat := stat.NewTours()
 
+	CronSaveTourGroupsToDB();
+
 	for {
 		Pipe(stat)
 		stat.Idle <- 1
-		time.Sleep(time.Second)
+		time.Sleep(time.Minute)
 	}
 }
 

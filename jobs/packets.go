@@ -23,13 +23,6 @@ func fetchPackets(t string) (channel chan data.PacketInfo) {
 				continue
 			}
 
-			/*
-			if !isOperatorActive(packet.SourceId) {
-				log.Info.Println("fetchPackets packet skip (operator)...")
-				continue
-			}
-			*/
-
 			log.Info.Println("fetchPackets packet to work")
 			channel <- packet
 		}

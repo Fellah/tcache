@@ -61,7 +61,7 @@ func FetchPacketsList(date string) ([]data.PacketInfo, error) {
 			}
 		}
 	}{}
-	log.Info.Println("FetchPacketsList packet data:\n", resp.Status, "\n", resp.Body)
+	log.Info.Println("FetchPacketsList packet data:\n", resp.Status)
 	if err = xml.NewDecoder(resp.Body).Decode(&envelope); err != nil {
 		return nil, err
 	}

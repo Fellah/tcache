@@ -20,6 +20,7 @@ func init() {
 var (
 	mx sync.Mutex
 	once_save_data = sync.Once{}
+	once_save_map_data = sync.Once{}
 )
 
 const (
@@ -30,8 +31,6 @@ const (
 func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool) {
 	wg := new(sync.WaitGroup)
 	wg.Add(workersNum)
-
-	end_save_process := cronSaveTourGroupsToDB();
 
 	// Run multiply workers to read concurrently from one channel.
 	for i := 0; i < workersNum; i++ {
@@ -48,10 +47,6 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 					log.Error.Println(err)
 					continue
 				}
-
-				collect := make(chan data.Tour)
-				log.Info.Println("fetchTours collect tours Run ...")
-				go collectTours(collect, stat)
 
 				// Process tours before send the to the database.
 				log.Info.Println("fetchTours tours loop Run ...")
@@ -84,18 +79,12 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 					// Partners tours
 					if prefilter.IsHotelNameActive(tour.HotelId) {
 						cache.RegisterTourGroup(tour)
-					}
-
-					// Tours cache
-					if prefilter.IsHotelNameActivePictures(tour.HotelId) {
-						collect <- tour
+						cache.RegisterMapTourGroup(tour)
 					} else {
 						skipped++
 					}
 				}
 				log.Info.Println("fetchTours tours loop FINISH ...")
-
-				close(collect)
 
 				stat.Total <- count
 				stat.Skipped <- skipped
@@ -110,30 +99,22 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 		wg.Wait()
 		log.Info.Println("fetchTours FINISH ...")
 
-		cache.SaveTourGroupsToDB(&once_save_data)
-
-		end_save_process <- true
 		end <- true
 	}()
 }
 
-func cronSaveTourGroupsToDB() (chan bool) {
-	end_chan := make(chan bool)
-
+func CronSaveTourGroupsToDB() {
 	go func() {
 		for {
 			select {
 			case <-ticker_save_data.C:
-				log.Info.Println("CRON: Save Partners Group Data By")
+				log.Info.Println("CRON: Save Partners Group Data")
 				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data) })
-			case <-end_chan:
-				log.Info.Println("CRON: End function - finish")
-				return
+				log.Info.Println("CRON: Save Map Group Data")
+				once_save_map_data.Do(func() { go cache.SaveMapTourGroupsToDB(&once_save_map_data) })
 			}
 		}
 	}()
-
-	return end_chan
 }
 
 func preProcessTour(packet data.PacketInfo, tour *data.Tour) {

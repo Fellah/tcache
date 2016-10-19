@@ -78,12 +78,10 @@ func CleanPartnerTours() {
 		return
 	}
 
-	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE checkin < NOW()")
-	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE updated_at < (NOW() - '1 hours'::interval)")
+	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE checkin < (NOW() - '1 day'::interval)")
+	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE updated_at < (NOW() - '1 hour'::interval)")
 
 	CommitTransaction(tx)
-
-	db.Query("VACUUM ANALYZE partners_tours")
 }
 
 func IsPresent(group_hash string) {
