@@ -33,9 +33,8 @@ func SaveTours(tours []data.Tour) {
 	}
 }
 
-
 func SaveMapTour(tour map[string]string, transaction *sql.Tx) {
-	if len(tour) == 0 {
+	if len(tour) == 0 || tour["checkin"] == "" {
 		return
 	}
 
@@ -52,7 +51,6 @@ func SaveMapTour(tour map[string]string, transaction *sql.Tx) {
 		log.Error.Println(err)
 	}
 }
-
 
 func CleanMapTours() {
 	tx, err := StartTransaction()

@@ -7,6 +7,10 @@ import (
 )
 
 func SavePartnerTour(group_hash string, tour map[string]string, transaction *sql.Tx) {
+	if tour["checkin"] == "" {
+		return
+	}
+
 	query := `
 		INSERT INTO partners_tours as cst (
 			group_hash,
@@ -82,10 +86,6 @@ func CleanPartnerTours() {
 	SendQueryParamsRaw(tx, "DELETE FROM partners_tours WHERE updated_at < (NOW() - '1 hour'::interval)")
 
 	CommitTransaction(tx)
-}
-
-func IsPresent(group_hash string) {
-
 }
 
 func a2i(str string) (int) {

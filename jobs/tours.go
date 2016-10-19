@@ -111,6 +111,9 @@ func CronSaveTourGroupsToDB() {
 		for {
 			select {
 			case <-ticker_save_data.C:
+				// temporary disable save (use rails for move data from redis to DB)
+				continue
+
 				log.Info.Println("CRON: Save Partners Group Data")
 				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data, &save_wait_group) })
 				log.Info.Println("CRON: Save Map Group Data")
