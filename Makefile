@@ -8,6 +8,12 @@ build:
 restart:
 	ssh $(SSH) 'systemctl --user restart tcache.service'
 
+start:
+	ssh $(SSH) 'systemctl --user start tcache.service'
+
+stop:
+	ssh $(SSH) 'systemctl --user stop tcache.service'
+
 .DEFAULT_GOAL := build
 
 .PHONY: build restart
