@@ -8,10 +8,12 @@ import (
 	"github.com/fellah/tcache/prefilter"
 	"github.com/fellah/tcache/stat"
 	"github.com/fellah/tcache/cache"
+	"sync"
 )
 
 var (
 	ticker_save_data = time.NewTicker(60 * time.Minute)
+	save_wait_group = sync.WaitGroup{}
 )
 
 func Start() {

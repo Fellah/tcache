@@ -144,7 +144,8 @@ func RegisterTourGroup(tour data.Tour) {
 	}
 }
 
-func SaveTourGroupsToDB(once_flag *sync.Once) {
+func SaveTourGroupsToDB(once_flag *sync.Once, wg *sync.WaitGroup) {
+	wg.Add(1)
 	count := redis_client.LLen("pt_tours_groups_keys").Val()
 	log.Info.Println("SaveTourGroupsToDB START (", count, ")...")
 
@@ -198,5 +199,6 @@ func SaveTourGroupsToDB(once_flag *sync.Once) {
 	db.CleanPartnerTours()
 	log.Info.Println("SaveTourGroupsToDB clean partners tours DONE...")
 
+	wg.Done()
 	*once_flag = sync.Once{}
 }

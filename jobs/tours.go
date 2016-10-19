@@ -51,6 +51,9 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 				// Process tours before send the to the database.
 				log.Info.Println("fetchTours tours loop Run ...")
 				for tour := range tours {
+					// Wait while data saved from redis to db
+					save_wait_group.Wait()
+
 					count++
 
 					preProcessTour(packet, &tour)
@@ -109,9 +112,9 @@ func CronSaveTourGroupsToDB() {
 			select {
 			case <-ticker_save_data.C:
 				log.Info.Println("CRON: Save Partners Group Data")
-				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data) })
+				once_save_data.Do(func() { go cache.SaveTourGroupsToDB(&once_save_data, &save_wait_group) })
 				log.Info.Println("CRON: Save Map Group Data")
-				once_save_map_data.Do(func() { go cache.SaveMapTourGroupsToDB(&once_save_map_data) })
+				once_save_map_data.Do(func() { go cache.SaveMapTourGroupsToDB(&once_save_map_data, &save_wait_group) })
 			}
 		}
 	}()
