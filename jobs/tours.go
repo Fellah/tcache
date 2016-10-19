@@ -49,7 +49,7 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 				}
 
 				// Process tours before send the to the database.
-				log.Info.Println("fetchTours tours loop Run ...")
+				log.Info.Println("fetchTours tours loop Run (with wait) ...")
 				for tour := range tours {
 					// Wait while data saved from redis to db
 					save_wait_group.Wait()
