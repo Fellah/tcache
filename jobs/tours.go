@@ -125,6 +125,7 @@ func CronSaveTourGroupsToDB() {
 
 func preProcessTour(packet data.PacketInfo, tour *data.Tour) {
 	tour.DptCityId = packet.DptCityId
+	tour.SourceId = packet.SourceId
 }
 
 func processTour(packet data.PacketInfo, tour *data.Tour) {

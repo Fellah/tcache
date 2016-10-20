@@ -98,6 +98,9 @@ func RegisterMapTourGroup(tour data.Tour) {
 	} else {
 		// Save full data of record
 		redis_client.HMSet(hash_key, map[string]string{
+			"source_id": strconv.Itoa(tour.SourceId),
+			"country_id": strconv.Itoa(tour.CountryId),
+
 			"hotel_id": strconv.Itoa(tour.HotelId),
 			"checkin": tour.Checkin,
 			"nights": strconv.Itoa(tour.Nights),
