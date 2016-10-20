@@ -103,11 +103,13 @@ func RegisterTourGroup(tour data.Tour) {
 				"tour_url": tour.TourUrl,
 				"room_name": tour.RoomName,
 				"receiving_party": tour.ReceivingParty,
+				"update_date": tour.UpdateDate,
 			})
 		}
 	} else {
 		// Save full data of record
 		redis_client.HMSet(hash_key, map[string]string{
+			"operator_id": strconv.Itoa(tour.SourceId),
 			"checkin": tour.Checkin,
 			"nights": strconv.Itoa(tour.Nights),
 			"adults": strconv.Itoa(tour.Adults),
@@ -137,6 +139,7 @@ func RegisterTourGroup(tour data.Tour) {
 			"tour_url": tour.TourUrl,
 			"room_name": tour.RoomName,
 			"receiving_party": tour.ReceivingParty,
+			"update_date": tour.UpdateDate,
 		})
 
 		// Add hash_key to list
