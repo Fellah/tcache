@@ -17,6 +17,8 @@ var (
 )
 
 func Start() {
+	log.Info.Println("START...")
+
 	stat := stat.NewTours()
 
 	CronSaveTourGroupsToDB();
