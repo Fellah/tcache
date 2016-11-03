@@ -38,7 +38,7 @@ const (
 func RegisterTourGroup(tour data.Tour) {
 	h := sha1.New()
 
-	meal_present := (tour.MealId != 117 )
+	meal_present := (tour.MealId != 117 && tour.MealId != 0)
 
 	// Add data for digest
 	io.WriteString(h, strconv.Itoa(tour.SourceId))
@@ -71,7 +71,7 @@ func RegisterTourGroup(tour data.Tour) {
 	io.WriteString(h, strconv.Itoa(kid3age))
 
 	io.WriteString(h, strconv.Itoa(tour.DptCityId))
-	io.WriteString(h, strconv.FormatBool(meal_present))
+	// io.WriteString(h, strconv.FormatBool(meal_present)) // https://www.wrike.com/open.htm?id=118675376
 
 	hash_sum := h.Sum(nil)
 	str := base64.StdEncoding.EncodeToString(hash_sum)
@@ -87,6 +87,8 @@ func RegisterTourGroup(tour data.Tour) {
 			redis_client.HMSet(hash_key, map[string]string{
 				"price": strconv.Itoa(tour.Price),
 				"meal_id": strconv.Itoa(tour.MealId),
+				"meal_name": tour.MealName,
+				"meal_present": strconv.FormatBool(meal_present),
 				"hotel_id": strconv.Itoa(tour.HotelId),
 				"tickets_included": strconv.Itoa(tour.TicketsIncluded),
 				"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),
@@ -119,10 +121,11 @@ func RegisterTourGroup(tour data.Tour) {
 			"kid3age": strconv.Itoa(kid3age),
 			"dpt_city_id": strconv.Itoa(tour.DptCityId),
 			"town_id": strconv.Itoa(tour.TownId),
-			"meal_present": strconv.FormatBool(meal_present),
 
 			"price": strconv.Itoa(tour.Price),
 			"meal_id": strconv.Itoa(tour.MealId),
+			"meal_name": tour.MealName,
+			"meal_present": strconv.FormatBool(meal_present),
 			"hotel_id": strconv.Itoa(tour.HotelId),
 			"tickets_included": strconv.Itoa(tour.TicketsIncluded),
 			"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),
