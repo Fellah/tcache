@@ -86,6 +86,7 @@ func RegisterMapTourGroup(tour data.Tour) {
 				"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),
 				"has_econom_tickets_rtn": strconv.Itoa(tour.HasEconomTicketsRtn),
 				"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
+				"room_name": tour.RoomName,
 				"ht_place_name": tour.HtPlaceName,
 				"tour_url": tour.TourUrl,
 
@@ -120,6 +121,7 @@ func RegisterMapTourGroup(tour data.Tour) {
 			"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),
 			"has_econom_tickets_rtn": strconv.Itoa(tour.HasEconomTicketsRtn),
 			"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
+			"room_name": tour.RoomName,
 			"ht_place_name": tour.HtPlaceName,
 			"tour_url": tour.TourUrl,
 
