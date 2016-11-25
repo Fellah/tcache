@@ -4,6 +4,7 @@ VERSION = latest
 build:
 	git tag --force --annotate $(VERSION) -m "$(VERSION)"
 	git push --force origin $(VERSION)
+	ssh $(SSH) 'docker pull fellah/tcache:latest'
 
 restart:
 	ssh $(SSH) 'systemctl --user restart tcache.service'
