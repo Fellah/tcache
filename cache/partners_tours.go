@@ -96,6 +96,7 @@ func RegisterTourGroup(tour data.Tour) {
 				"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
 				"sletat_request_id": strconv.Itoa(tour.RequestId),
 				"sletat_offer_id": strconv.FormatInt(tour.OfferId, 10),
+				"ht_place_name": tour.HtPlaceName,
 
 				"few_econom_tickets_dpt": strconv.Itoa(tour.FewEconomTicketsDpt),
 				"few_econom_tickets_rtn": strconv.Itoa(tour.FewEconomTicketsRtn),
@@ -133,6 +134,7 @@ func RegisterTourGroup(tour data.Tour) {
 			"hotel_is_in_stop": strconv.Itoa(tour.HotelIsInStop),
 			"sletat_request_id": strconv.Itoa(tour.RequestId),
 			"sletat_offer_id": strconv.FormatInt(tour.OfferId, 10),
+			"ht_place_name": tour.HtPlaceName,
 
 			"few_econom_tickets_dpt": strconv.Itoa(tour.FewEconomTicketsDpt),
 			"few_econom_tickets_rtn": strconv.Itoa(tour.FewEconomTicketsRtn),

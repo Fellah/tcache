@@ -31,6 +31,7 @@ type Tour struct {
 	TourUrl			string `xml:"tourUrl,attr"`
 	RoomName		string `xml:"roomName,attr"`
 	ReceivingParty		string `xml:"receivingParty,attr"`
+	HtPlaceName		string `xml:"htplaceName,attr"`
 
 	CreateDate string
 
