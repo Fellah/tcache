@@ -79,12 +79,14 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 						stat.KidsIssue <- 1
 					}
 
+					//  Map tours
+					if prefilter.IsHotelNameActivePictures(tour.HotelId) {
+						cache.RegisterMapTourGroup(tour)
+					}
+
 					// Partners tours
 					if prefilter.IsHotelNameActive(tour.HotelId) {
 						cache.RegisterTourGroup(tour)
-						cache.RegisterMapTourGroup(tour)
-					} else {
-						skipped++
 					}
 				}
 				log.Info.Println("fetchTours tours loop FINISH ...")
