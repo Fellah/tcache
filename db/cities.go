@@ -32,8 +32,64 @@ func QueryCities() ([]int, error) {
 	return citiesIds, nil
 }
 
+func QueryPartnersCities() ([]int, error) {
+	rows, err := db.Query("SELECT sletat_city_id FROM sletat_cities WHERE active_for_partners")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	var cityId int
+	citiesIds := make([]int, 0)
+
+	for rows.Next() {
+		err = rows.Scan(&cityId)
+		if err != nil {
+			log.Error.Println(err)
+		}
+
+		citiesIds = append(citiesIds, cityId)
+	}
+
+	return citiesIds, nil
+}
+
 func QueryDepartCities() ([]int, error) {
 	rows, err := db.Query("SELECT sletat_depart_city_id FROM sletat_depart_cities WHERE active = true")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var cityId int
+	citiesIds := make([]int, 0)
+
+	for rows.Next() {
+		err = rows.Scan(&cityId)
+		if err != nil {
+			log.Error.Println(err)
+		}
+
+		citiesIds = append(citiesIds, cityId)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return citiesIds, nil
+}
+
+func QueryPartnersDepartCities() ([]int, error) {
+	rows, err := db.Query("SELECT sletat_depart_city_id FROM sletat_depart_cities WHERE active_for_partners")
 	if err != nil {
 		return nil, err
 	}

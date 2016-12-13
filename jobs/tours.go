@@ -65,11 +65,6 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 						continue
 					}
 
-					if !isCityActive(tour.TownId) {
-						skipped++
-						continue
-					}
-
 					if !isFullInfo(&tour) {
 						skipped++
 						continue
@@ -80,12 +75,12 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 					}
 
 					//  Map tours
-					if prefilter.IsHotelNameActivePictures(tour.HotelId) {
+					if mapTourFilter(&tour) {
 						cache.RegisterMapTourGroup(tour)
 					}
 
 					// Partners tours
-					if prefilter.IsHotelNameActive(tour.HotelId) {
+					if partnersTourFilter(&tour) {
 						cache.RegisterTourGroup(tour)
 					}
 				}
@@ -187,4 +182,16 @@ func isFullInfo(tour *data.Tour) bool {
 		(tour.HasEconomTicketsRtn == 1 || tour.HasEconomTicketsRtn == 2) &&
 		(tour.HotelIsInStop == 0 || tour.HotelIsInStop == 2) &&
 		tour.HotelId != 0)
+}
+
+func mapTourFilter(tour *data.Tour) bool {
+	return (prefilter.IsTownGood(tour.TownId) &&
+		prefilter.IsHotelNameActivePictures(tour.HotelId) &&
+		prefilter.IsDepartCityActive(tour.DptCityId))
+}
+
+func partnersTourFilter(tour *data.Tour) bool {
+	return (prefilter.IsPartnersTownGood(tour.TownId) &&
+		prefilter.IsHotelNameActive(tour.HotelId) &&
+		prefilter.IsPartnersDepartCityActive(tour.DptCityId))
 }

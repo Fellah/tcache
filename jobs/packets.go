@@ -4,6 +4,7 @@ import (
 	"github.com/fellah/tcache/data"
 	"github.com/fellah/tcache/log"
 	"github.com/fellah/tcache/sletat"
+	"github.com/fellah/tcache/prefilter"
 )
 
 func fetchPackets(t string) (channel chan data.PacketInfo) {
@@ -35,7 +36,8 @@ func fetchPackets(t string) (channel chan data.PacketInfo) {
 }
 
 func skipPacket(packet *data.PacketInfo) bool {
-	if !isDepartCityActive(packet.DptCityId) {
+	if !prefilter.IsDepartCityActive(packet.DptCityId) &&
+	   !prefilter.IsPartnersDepartCityActive(packet.DptCityId) {
 		return true
 	}
 

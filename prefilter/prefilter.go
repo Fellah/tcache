@@ -9,6 +9,10 @@ import (
 var hotelsNAPIds []int
 var hotelsNAIds []int
 var townsIds []int
+var departCitiesIds []int
+
+var townsPartnersIds []int
+var departCitiesPartnersIds []int
 
 // Public
 
@@ -29,6 +33,21 @@ func PrepareData() {
 	if err != nil {
 		log.Error.Fatal(err)
 	}
+
+	departCitiesIds, err = db.QueryDepartCities()
+	if err != nil {
+		log.Error.Fatal(err)
+	}
+
+	townsPartnersIds, err = db.QueryPartnersCities()
+	if err != nil {
+		log.Error.Fatal(err)
+	}
+
+	departCitiesPartnersIds, err = db.QueryPartnersDepartCities()
+	if err != nil {
+		log.Error.Fatal(err)
+	}
 }
 
 func ForPartnersTours(tour *data.Tour) bool {
@@ -37,7 +56,7 @@ func ForPartnersTours(tour *data.Tour) bool {
 		(tour.HasEconomTicketsRtn == 1 || tour.HasEconomTicketsRtn == 2) &&
 		(tour.HotelIsInStop == 0 || tour.HotelIsInStop == 2) &&
 		tour.HotelId != 0 &&
-		isTownGood(tour.TownId))
+		IsTownGood(tour.TownId))
 }
 
 func IsHotelNameActivePictures(hotelId int) bool {
@@ -48,9 +67,23 @@ func IsHotelNameActive(hotelId int) bool {
 	return (isInListInt(hotelsNAPIds, hotelId) || isInListInt(hotelsNAIds, hotelId))
 }
 
-func isTownGood(townId int) bool {
+func IsTownGood(townId int) bool {
 	return isInListInt(townsIds, townId)
 }
+
+func IsDepartCityActive(dptCityId int) bool {
+	return isInListInt(departCitiesIds, dptCityId)
+}
+
+
+func IsPartnersTownGood(townId int) bool {
+	return isInListInt(townsPartnersIds, townId)
+}
+
+func IsPartnersDepartCityActive(dptCityId int) bool {
+	return isInListInt(departCitiesPartnersIds, dptCityId)
+}
+
 
 func isInListInt(list []int, id int) bool {
 	for _, goodId := range list {

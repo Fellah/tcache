@@ -32,7 +32,6 @@ func Start() {
 
 func Pipe(stat *stat.Tours) {
 	queryOperators()
-	queryCities()
 	prefilter.PrepareData()
 	cache.Init()
 
