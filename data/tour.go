@@ -41,4 +41,7 @@ type Tour struct {
 	PriceByr int
 	PriceEur int
 	PriceUsd int
+
+	FuelSurchargeMin	int
+	FuelSurchargeMax	int
 }

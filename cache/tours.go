@@ -81,6 +81,9 @@ func RegisterMapTourGroup(tour data.Tour) {
 			// Update tour info data
 			redis_client.HMSet(hash_key, map[string]string{
 				"price": strconv.Itoa(tour.Price),
+				"fuel_surcharge_min": strconv.Itoa(tour.FuelSurchargeMin),
+				"fuel_surcharge_max": strconv.Itoa(tour.FuelSurchargeMax),
+
 				"town_id": strconv.Itoa(tour.TownId),
 				"tickets_included": strconv.Itoa(tour.TicketsIncluded),
 				"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),
@@ -116,6 +119,9 @@ func RegisterMapTourGroup(tour data.Tour) {
 			"meal_id": strconv.Itoa(tour.MealId),
 
 			"price": strconv.Itoa(tour.Price),
+			"fuel_surcharge_min": strconv.Itoa(tour.FuelSurchargeMin),
+			"fuel_surcharge_max": strconv.Itoa(tour.FuelSurchargeMax),
+
 			"town_id": strconv.Itoa(tour.TownId),
 			"tickets_included": strconv.Itoa(tour.TicketsIncluded),
 			"has_econom_tickets_dpt": strconv.Itoa(tour.HasEconomTicketsDpt),

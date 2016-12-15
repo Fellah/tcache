@@ -32,6 +32,7 @@ func Start() {
 
 func Pipe(stat *stat.Tours) {
 	queryOperators()
+	loadFuelSurcharges()
 	prefilter.PrepareData()
 	cache.Init()
 

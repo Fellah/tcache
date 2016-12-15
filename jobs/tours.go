@@ -76,6 +76,7 @@ func fetchTours(packets <-chan data.PacketInfo, stat *stat.Tours, end chan bool)
 
 					//  Map tours
 					if mapTourFilter(&tour) {
+						setFuelSurchargesForTour(&tour)
 						cache.RegisterMapTourGroup(tour)
 					}
 
